@@ -16,14 +16,9 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         centerTitle: true,
         title: Text(
           "Mi Agenda",

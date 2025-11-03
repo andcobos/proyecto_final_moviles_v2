@@ -9,30 +9,30 @@ class ProviderProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    final backgroundColor = isDarkMode ? const Color(0xFF121212) : Colors.grey.shade100;
+    final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final primaryTextColor = isDarkMode ? Colors.white : const Color(0xFF1D3557);
+    final secondaryTextColor = isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
+    final accentColor = const Color(0xFF1D3557);
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        backgroundColor: cardColor,
         centerTitle: true,
         title: Text(
           "Mi Perfil",
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w700,
+            color: primaryTextColor,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // TODO: Navegar a ajustes del proveedor
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Ajustes del proveedor')),
-              );
-            },
+            icon: Icon(Icons.settings, color: primaryTextColor),
+            onPressed: () => context.push('/pro/ajustes'),
           ),
         ],
       ),
@@ -41,23 +41,22 @@ class ProviderProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Información principal del proveedor
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
+                    if (!isDarkMode)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
                   ],
                 ),
                 child: Column(
                   children: [
-                    // Avatar y información básica
                     const CircleAvatar(
                       radius: 50,
                       backgroundImage: NetworkImage(
@@ -65,83 +64,70 @@ class ProviderProfileScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Ricardo Mendoza',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: primaryTextColor,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Electricista • 4.8 ⭐ • 124 reseñas',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
+                      style: TextStyle(fontSize: 14, color: secondaryTextColor),
                     ),
                     const SizedBox(height: 16),
-                    
-                    // Estadísticas
                     Row(
                       children: [
-                        Expanded(
-                          child: _buildStatItem('Trabajos', '156'),
-                        ),
-                        Expanded(
-                          child: _buildStatItem('Clientes', '89'),
-                        ),
-                        Expanded(
-                          child: _buildStatItem('Años Exp.', '8'),
-                        ),
+                        Expanded(child: _buildStatItem('Trabajos', '156', primaryTextColor, secondaryTextColor)),
+                        Expanded(child: _buildStatItem('Clientes', '89', primaryTextColor, secondaryTextColor)),
+                        Expanded(child: _buildStatItem('Años Exp.', '8', primaryTextColor, secondaryTextColor)),
                       ],
                     ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 24),
 
-              // Botón editar perfil
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Editar perfil')),
-                    );
-                  },
+                  onPressed: () => context.push('/pro/editar-perfil'),
                   icon: const Icon(Icons.edit),
                   label: const Text('Editar Perfil'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1D3557),
+                    backgroundColor: accentColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
 
-              // Servicios ofrecidos
               _buildSection(
-                'Servicios Ofrecidos',
-                [
-                  _buildServiceChip('Reparaciones Eléctricas'),
-                  _buildServiceChip('Instalaciones'),
-                  _buildServiceChip('Mantenimiento'),
-                  _buildServiceChip('Consultoría'),
+                title: 'Servicios Ofrecidos',
+                children: [
+                  _buildServiceChip('Reparaciones Eléctricas', accentColor, isDarkMode),
+                  _buildServiceChip('Instalaciones', accentColor, isDarkMode),
+                  _buildServiceChip('Mantenimiento', accentColor, isDarkMode),
+                  _buildServiceChip('Consultoría', accentColor, isDarkMode),
                 ],
+                cardColor: cardColor,
+                primaryTextColor: primaryTextColor,
+                isDarkMode: isDarkMode,
               ),
+
               const SizedBox(height: 24),
 
-              // Portafolio
-              _buildPortfolioSection(),
+              _buildPortfolioSection(cardColor, primaryTextColor, isDarkMode),
+
               const SizedBox(height: 24),
 
-              // Testimonios
-              _buildTestimonialsSection(),
+              _buildTestimonialsSection(cardColor, primaryTextColor, secondaryTextColor, isDarkMode),
             ],
           ),
         ),
@@ -150,187 +136,150 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, Color textColor, Color secondary) {
     return Column(
       children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1D3557),
-          ),
-        ),
+        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: secondary)),
       ],
     );
   }
 
-  Widget _buildSection(String title, List<Widget> children) {
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+    required Color cardColor,
+    required Color primaryTextColor,
+    required bool isDarkMode,
+  }) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+          if (!isDarkMode)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1D3557),
-            ),
-          ),
+          Text(title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor)),
           const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: children,
-          ),
+          Wrap(spacing: 8, runSpacing: 8, children: children),
         ],
       ),
     );
   }
 
-  Widget _buildServiceChip(String service) {
+  Widget _buildServiceChip(String service, Color accentColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFF1D3557).withOpacity(0.1),
+        color: isDarkMode ? accentColor.withOpacity(0.25) : accentColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF1D3557).withOpacity(0.3),
-        ),
+        border: Border.all(color: accentColor.withOpacity(0.3)),
       ),
       child: Text(
         service,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF1D3557),
+          color: isDarkMode ? Colors.white : accentColor,
         ),
       ),
     );
   }
 
-  Widget _buildPortfolioSection() {
+  Widget _buildPortfolioSection(Color cardColor, Color textColor, bool isDarkMode) {
+    final works = [
+      {'image': 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400', 'title': 'Instalación eléctrica'},
+      {'image': 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400', 'title': 'Reparación de panel'},
+      {'image': 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=400', 'title': 'Cableado moderno'},
+      {'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400', 'title': 'Iluminación LED'},
+    ];
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+          if (!isDarkMode)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Portafolio',
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Text('Portafolio',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1D3557),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () {
-                  // ScaffoldMessenger.of(context).showSnackBar(
-                  //   const SnackBar(content: Text('Agregar más fotos')),
-                  // );
-                },
-                icon: const Icon(Icons.add, size: 16),
-                label: const Text('Agregar'),
-              ),
-            ],
-          ),
+                  color: textColor,
+                )),
+            TextButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Agregar'),
+            ),
+          ]),
           const SizedBox(height: 16),
           SizedBox(
-            height: 120,
+            height: 160, 
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: 4,
+              itemCount: works.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
-                final works = [
-                  {
-                    'image': 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400',
-                    'title': 'Instalación eléctrica',
-                  },
-                  {
-                    'image': 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400',
-                    'title': 'Reparación de panel',
-                  },
-                  {
-                    'image': 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=400',
-                    'title': 'Cableado moderno',
-                  },
-                  {
-                    'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
-                    'title': 'Iluminación LED',
-                  },
-                ];
-                
                 final work = works[index];
-                return SizedBox(
-                  width: 120,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            work['image']!,
-                            width: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 120,
-                                color: Colors.grey.shade200,
-                                child: const Icon(Icons.image_not_supported),
-                              );
-                            },
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 120,
+                        height: 120,
+                        child: Image.network(
+                          work['image']!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: Colors.grey.shade800,
+                            child: const Icon(Icons.image_not_supported, color: Colors.white),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: 120,
+                      child: Text(
                         work['title']!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
+                          color: textColor,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
@@ -340,122 +289,90 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTestimonialsSection() {
+  Widget _buildTestimonialsSection(Color cardColor, Color textColor, Color secondary, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+          if (!isDarkMode)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Testimonios',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1D3557),
-            ),
-          ),
+          Text('Testimonios',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
           const SizedBox(height: 16),
-          _buildTestimonialCard(
-            'Sofía G.',
-            'Hace 2 semanas',
-            5,
-            'Ricardo hizo un trabajo excelente en mi casa. Muy profesional y eficiente.',
-          ),
+          _buildTestimonialCard('Sofía G.', 'Hace 2 semanas', 5,
+              'Ricardo hizo un trabajo excelente en mi casa. Muy profesional y eficiente.', isDarkMode),
           const SizedBox(height: 12),
-          _buildTestimonialCard(
-            'Carlos R.',
-            'Hace 1 mes',
-            4,
-            'Buen servicio, aunque hubo un pequeño retraso.',
-          ),
+          _buildTestimonialCard('Carlos R.', 'Hace 1 mes', 4,
+              'Buen servicio, aunque hubo un pequeño retraso.', isDarkMode),
           const SizedBox(height: 12),
-          _buildTestimonialCard(
-            'Ana M.',
-            'Hace 2 meses',
-            5,
-            'Excelente profesional, muy recomendado. Trabajo de calidad.',
-          ),
+          _buildTestimonialCard('Ana M.', 'Hace 2 meses', 5,
+              'Excelente profesional, muy recomendado. Trabajo de calidad.', isDarkMode),
         ],
       ),
     );
   }
 
-  Widget _buildTestimonialCard(String name, String time, int rating, String comment) {
+  Widget _buildTestimonialCard(
+      String name, String time, int rating, String comment, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Colors.grey.shade300,
-                child: Text(
-                  name[0],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => Icon(
-                    i < rating ? Icons.star : Icons.star_border,
-                    size: 16,
-                    color: Colors.amber.shade700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            comment,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade700,
+          Row(children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor:
+                  isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+              child: Text(name[0],
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             ),
-          ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: isDarkMode ? Colors.white : Colors.black)),
+                  Text(time,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                ],
+              ),
+            ),
+            Row(
+              children: List.generate(
+                5,
+                (i) => Icon(
+                  i < rating ? Icons.star : Icons.star_border,
+                  size: 16,
+                  color: Colors.amber.shade700,
+                ),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text(comment,
+              style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode ? Colors.white70 : Colors.grey.shade700)),
         ],
       ),
     );

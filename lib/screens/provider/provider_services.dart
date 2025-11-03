@@ -13,10 +13,6 @@ class ProviderServicesScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         centerTitle: true,
         title: Text(
           "Mis Servicios",
@@ -74,7 +70,7 @@ class ProviderServicesScreen extends StatelessWidget {
                 Colors.blue,
                 "Pendiente",
                 Colors.orange,
-                () => context.go('/pro/servicio/detalles'),
+                () => context.push('/pro/servicio/detalles'),
               ),
               const SizedBox(height: 8),
               _buildServiceCard(
@@ -86,7 +82,7 @@ class ProviderServicesScreen extends StatelessWidget {
                 Colors.orange,
                 "Confirmado",
                 Colors.green,
-                () => context.go('/pro/servicio/detalles'),
+                () => context.push('/pro/servicio/detalles'),
               ),
 
               const SizedBox(height: 24),
@@ -106,7 +102,7 @@ class ProviderServicesScreen extends StatelessWidget {
                 Colors.brown,
                 "Completado",
                 Colors.green,
-                () => context.go('/pro/servicio/detalles'),
+                () => context.push('/pro/servicio/detalles'),
               ),
               const SizedBox(height: 8),
               _buildServiceCard(
@@ -118,7 +114,7 @@ class ProviderServicesScreen extends StatelessWidget {
                 Colors.purple,
                 "Completado",
                 Colors.green,
-                () => context.go('/pro/servicio/detalles'),
+                () => context.push('/pro/servicio/detalles'),
               ),
             ],
           ),

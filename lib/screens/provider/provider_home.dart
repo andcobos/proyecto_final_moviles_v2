@@ -12,34 +12,46 @@ class ProviderHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeNotifierProvider).isDarkMode;
 
+    // Colores adaptativos
+    final primaryText = isDarkMode ? Colors.white : Colors.black;
+    final secondaryText =
+        isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
+    final cardColor =
+        isDarkMode ? Colors.grey.shade900.withOpacity(0.6) : Colors.white;
+    final borderColor =
+        isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200;
+    final boxShadowColor =
+        isDarkMode ? Colors.transparent : Colors.black.withOpacity(0.05);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           "Fixea Pro",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () => context.push('/pro/notificaciones'),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: primaryText,
           ),
-        ],
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            const Text(
+            Text(
               "Hola, Ricardo",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: primaryText,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               "Electricista • 4.8 ⭐ • 124 reseñas",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: secondaryText),
             ),
             const SizedBox(height: 20),
 
@@ -52,6 +64,10 @@ class ProviderHomeScreen extends ConsumerWidget {
                     "3",
                     Icons.work_outline,
                     Colors.blue,
+                    cardColor,
+                    boxShadowColor,
+                    primaryText,
+                    secondaryText,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -61,6 +77,10 @@ class ProviderHomeScreen extends ConsumerWidget {
                     "5",
                     Icons.pending_outlined,
                     Colors.orange,
+                    cardColor,
+                    boxShadowColor,
+                    primaryText,
+                    secondaryText,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -70,6 +90,10 @@ class ProviderHomeScreen extends ConsumerWidget {
                     "24",
                     Icons.check_circle_outline,
                     Colors.green,
+                    cardColor,
+                    boxShadowColor,
+                    primaryText,
+                    secondaryText,
                   ),
                 ),
               ],
@@ -78,9 +102,13 @@ class ProviderHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Acciones rápidas
-            const Text(
+            Text(
               "Acciones rápidas",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryText,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -91,6 +119,9 @@ class ProviderHomeScreen extends ConsumerWidget {
                     Icons.work_outline,
                     Colors.blue,
                     () => context.go('/pro/trabajos'),
+                    cardColor,
+                    boxShadowColor,
+                    primaryText,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -100,6 +131,9 @@ class ProviderHomeScreen extends ConsumerWidget {
                     Icons.calendar_today,
                     Colors.green,
                     () => context.go('/pro/agenda'),
+                    cardColor,
+                    boxShadowColor,
+                    primaryText,
                   ),
                 ),
               ],
@@ -108,9 +142,13 @@ class ProviderHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Próximos trabajos
-            const Text(
+            Text(
               "Próximos trabajos",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryText,
+              ),
             ),
             const SizedBox(height: 12),
             _buildJobCard(
@@ -120,6 +158,10 @@ class ProviderHomeScreen extends ConsumerWidget {
               "Calle Principal 123",
               Icons.plumbing,
               Colors.blue,
+              cardColor,
+              borderColor,
+              secondaryText,
+              primaryText,
             ),
             const SizedBox(height: 8),
             _buildJobCard(
@@ -129,6 +171,10 @@ class ProviderHomeScreen extends ConsumerWidget {
               "Avenida Central 456",
               Icons.electrical_services,
               Colors.orange,
+              cardColor,
+              borderColor,
+              secondaryText,
+              primaryText,
             ),
 
             const SizedBox(height: 24),
@@ -137,13 +183,20 @@ class ProviderHomeScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: isDarkMode
+                    ? Colors.green.shade900.withOpacity(0.3)
+                    : Colors.green.shade50,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(
+                  color: isDarkMode
+                      ? Colors.green.shade700
+                      : Colors.green.shade200,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.attach_money, color: Colors.green.shade700, size: 32),
+                  Icon(Icons.attach_money,
+                      color: Colors.green.shade600, size: 32),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -152,14 +205,14 @@ class ProviderHomeScreen extends ConsumerWidget {
                         Text(
                           "Ingresos del mes",
                           style: TextStyle(
-                            color: Colors.green.shade700,
+                            color: Colors.green.shade600,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           "\$2,450.00",
                           style: TextStyle(
-                            color: Colors.green.shade800,
+                            color: Colors.green.shade600,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
@@ -167,7 +220,7 @@ class ProviderHomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  Icon(Icons.trending_up, color: Colors.green.shade700),
+                  Icon(Icons.trending_up, color: Colors.green.shade600),
                 ],
               ),
             ),
@@ -178,15 +231,26 @@ class ProviderHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  // --- Widgets ---
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+    Color cardColor,
+    Color boxShadow,
+    Color primaryText,
+    Color secondaryText,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: boxShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -207,10 +271,7 @@ class ProviderHomeScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             title,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 12, color: secondaryText),
             textAlign: TextAlign.center,
           ),
         ],
@@ -218,17 +279,18 @@ class ProviderHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(String title, IconData icon, Color color,
+      VoidCallback onTap, Color cardColor, Color boxShadow, Color textColor) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: boxShadow,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -240,9 +302,10 @@ class ProviderHomeScreen extends ConsumerWidget {
             const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: textColor,
               ),
               textAlign: TextAlign.center,
             ),
@@ -252,19 +315,24 @@ class ProviderHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildJobCard(String service, String client, String time, String address, IconData icon, Color color) {
+  Widget _buildJobCard(
+    String service,
+    String client,
+    String time,
+    String address,
+    IconData icon,
+    Color color,
+    Color cardColor,
+    Color borderColor,
+    Color secondaryText,
+    Color primaryText,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
@@ -283,49 +351,32 @@ class ProviderHomeScreen extends ConsumerWidget {
               children: [
                 Text(
                   service,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   client,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: secondaryText),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
+                Text(time,
+                    style: TextStyle(fontSize: 12, color: secondaryText)),
                 const SizedBox(height: 4),
                 Text(
                   address,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 12, color: secondaryText),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward_ios, size: 16),
-            onPressed: () {
-              // Navegar a detalles del trabajo
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   const SnackBar(content: Text('Ver detalles del trabajo')),
-              // );
-            },
-          ),
+          Icon(Icons.arrow_forward_ios,
+              size: 16, color: secondaryText.withOpacity(0.7)),
         ],
       ),
     );

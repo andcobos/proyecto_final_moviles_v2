@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'package:go_router/go_router.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -19,15 +19,17 @@ class LandingPage extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
+                // Logo principal
                 Image.asset(
                   'assets/logo.jpg',
-                  width: 260, // antes podía ser 100 o sin tamaño
-                  height: 260,
+                  width: 220,
+                  height: 220,
                   fit: BoxFit.contain,
                 ),
 
-                // Texto FIXEA
+                const SizedBox(height: 16),
+
+                // Título
                 Text(
                   "FIXEA",
                   style: theme.textTheme.headlineMedium?.copyWith(
@@ -35,7 +37,8 @@ class LandingPage extends StatelessWidget {
                     color: colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 20),
+
+                const SizedBox(height: 16),
 
                 // Subtítulo
                 Text(
@@ -45,9 +48,10 @@ class LandingPage extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+
                 const SizedBox(height: 12),
 
-                // Texto descriptivo
+                // Descripción
                 Text(
                   "Encuentra y contrata expertos para cualquier tarea en tu hogar. "
                   "Fixea te conecta con profesionales confiables y calificados.",
@@ -56,27 +60,58 @@ class LandingPage extends StatelessWidget {
                     color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
                   ),
                 ),
-                const SizedBox(height: 30),
 
-                // Botón
+                const SizedBox(height: 40),
+
+                // Botón para CLIENTES
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
+                    onPressed: () => context.go('/auth/client/login'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    },
-                    child: const Text("Comenzar"),
+                    child: const Text(
+                      "Busco servicios",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Botón para PROVEEDORES
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => context.go('/auth/provider/login'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: colorScheme.primary,
+                      side: BorderSide(color: colorScheme.primary, width: 1.5),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "Brindo servicios",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                Text(
+                  "Explora y conecta con confianza. ¡Empieza ahora!",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ],

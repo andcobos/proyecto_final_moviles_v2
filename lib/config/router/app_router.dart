@@ -25,6 +25,8 @@ import '../../screens/provider/provider_services.dart';
 import '../../screens/provider/provider_agenda.dart';
 import '../../screens/provider/provider_profile.dart';
 import '../../screens/provider/provider_service_details.dart';
+import '../../screens/provider/provider_edit_profile.dart';
+import '../../screens/provider/provider_profile_settings.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -132,6 +134,16 @@ final GoRouter appRouter = GoRouter(
       path: '/pro/servicio/detalles',
       name: ProviderServiceDetailsScreen.name,
       builder: (context, state) => const ProviderServiceDetailsScreen(),
+    ),
+    GoRoute(
+      path: '/pro/editar-perfil',
+      name: ProviderEditProfileScreen.name,
+      builder: (context, state) => const ProviderEditProfileScreen(),
+    ),
+    GoRoute(
+      path: '/pro/ajustes',
+      name: ProviderProfileSettingsScreen.name,
+      builder: (context, state) => const ProviderProfileSettingsScreen(),
     ),
   ],
 );

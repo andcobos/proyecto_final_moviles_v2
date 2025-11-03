@@ -13,10 +13,6 @@ class ProviderJobsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         centerTitle: true,
         title: Text(
           "Trabajos Asignados",
