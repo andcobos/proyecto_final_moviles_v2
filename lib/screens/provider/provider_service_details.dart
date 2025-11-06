@@ -245,7 +245,7 @@ class ProviderServiceDetailsScreen extends ConsumerWidget {
 
   Widget _buildAttachedPhotos(Color cardColor, Color primaryText, Color accentColor) {
     final photos = [
-      'https://images.unsplash.com/photo-1581578731548-c6a0c3f2fcc0?w=400',
+      "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400",
       'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
     ];

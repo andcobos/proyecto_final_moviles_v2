@@ -11,12 +11,12 @@ import '../../screens/landing_login/provider_register_page.dart';
 // IMPORTA PANTALLAS DE CLIENTE
 import '../../screens/home/home_screen.dart';
 import '../../screens/categories/categories.dart';
-import '../../screens/profile/profile.dart';
+import '../../screens/profile/profile_profesional.dart';
 import '../../screens/trabajos/servicios.dart';
 import '../../screens/trabajos/solicitar_servicio.dart';
 import '../../screens/notificaciones/notificaciones.dart';
 import '../../screens/payment/payment_screen.dart';
-import '../../screens/settings/user_settings.dart';
+import '../../screens/settings/prof_settings.dart';
 
 // IMPORTA PANTALLAS DE PROVEEDOR
 import '../../screens/provider/provider_home.dart';
