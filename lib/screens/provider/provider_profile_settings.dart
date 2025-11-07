@@ -218,7 +218,6 @@ class ProviderProfileSettingsScreen extends ConsumerWidget {
     );
   }
 
-  // 🔹 Método de diálogo de cierre de sesión (versión igual a tu ejemplo)
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,

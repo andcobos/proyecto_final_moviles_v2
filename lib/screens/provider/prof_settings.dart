@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart';
 
 class UserSettingsScreen extends StatelessWidget {
   const UserSettingsScreen({super.key});
@@ -15,7 +14,7 @@ class UserSettingsScreen extends StatelessWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.push('/ajustes'),
         ),
         centerTitle: true,
         title: Text(

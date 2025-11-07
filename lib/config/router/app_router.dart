@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 // IMPORTA PANTALLAS DE AUTENTICACIÓN
@@ -9,14 +8,17 @@ import '../../screens/landing_login/provider_login_page.dart';
 import '../../screens/landing_login/provider_register_page.dart';
 
 // IMPORTA PANTALLAS DE CLIENTE
-import '../../screens/home/home_screen.dart';
-import '../../screens/categories/categories.dart';
-import '../../screens/profile/profile_profesional.dart';
-import '../../screens/trabajos/servicios.dart';
-import '../../screens/trabajos/solicitar_servicio.dart';
-import '../../screens/notificaciones/notificaciones.dart';
-import '../../screens/payment/payment_screen.dart';
-import '../../screens/settings/prof_settings.dart';
+import '../../screens/client/home_screen.dart';
+import '../../screens/client/categories.dart';
+import '../../screens/client/servicios.dart';
+import '../../screens/client/solicitar_servicio.dart';
+import '../../screens/client/notificaciones.dart';
+import '../../screens/client/payment_screen.dart';
+import '../../screens/provider/prof_settings.dart';
+import '../../screens/client/details_service.dart';
+import '../../screens/client/reseña.dart';
+import '../../screens/client/profile.dart';
+
 
 // IMPORTA PANTALLAS DE PROVEEDOR
 import '../../screens/provider/provider_home.dart';
@@ -92,6 +94,16 @@ final GoRouter appRouter = GoRouter(
       path: '/notificaciones',
       name: NotificacionesPage.name,
       builder: (context, state) => const NotificacionesPage(),
+    ),
+    GoRoute(
+      path: '/servicio/detalles',
+      name: DetailsServicePage.name,
+      builder: (context, state) => const DetailsServicePage(),
+    ),
+    GoRoute(
+      path: '/dejar-resena',
+      name: ReviewScreen.name,
+      builder: (context, state) => const ReviewScreen(),
     ),
     GoRoute(
       path: '/pago',

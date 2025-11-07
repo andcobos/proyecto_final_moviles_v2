@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart' as customNavBar;
+import 'nav_bar.dart' as customNavBar;
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -14,10 +14,6 @@ class ProfilePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         centerTitle: true,
         title: Text(
           'Mi Perfil',
@@ -28,7 +24,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => context.go('/ajustes'),
+            onPressed: () => context.push('/ajustes'),
           ),
         ],
       ),
@@ -42,7 +38,7 @@ class ProfilePage extends StatelessWidget {
               const CircleAvatar(
                 radius: 48,
                 backgroundImage: NetworkImage(
-                  'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=800',
+                  'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=800',
                 ),
               ),
               const SizedBox(height: 12),

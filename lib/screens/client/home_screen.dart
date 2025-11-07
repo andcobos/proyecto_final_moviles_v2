@@ -31,7 +31,7 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           children: [
             const Text(
-              "Hola, Ricardo",
+              "Hola, Sofía",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),

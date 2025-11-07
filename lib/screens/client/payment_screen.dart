@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -70,19 +69,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Resumen del servicio
               _buildServiceSummary(theme),
               const SizedBox(height: 24),
-
-              // Método de pago
               _buildPaymentMethod(theme, colorScheme),
               const SizedBox(height: 24),
-
-              // Detalles del pago
               _buildPaymentDetails(theme, colorScheme),
               const SizedBox(height: 32),
-
-              // Botón de pago
               _buildPaymentButton(colorScheme),
             ],
           ),
@@ -151,8 +143,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          
-          // Tarjeta de crédito/débito
           _buildPaymentOption(
             'tarjeta',
             'Tarjeta de crédito/débito',
@@ -160,16 +150,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
             selectedPaymentMethod == 'tarjeta',
           ),
           const SizedBox(height: 12),
-          
-          // Billetera digital
           _buildPaymentOption(
             'digital',
             'Billetera Digital',
             Icons.account_balance_wallet,
             selectedPaymentMethod == 'digital',
           ),
-          
-          // Campos de tarjeta (solo si está seleccionada)
           if (selectedPaymentMethod == 'tarjeta') ...[
             const SizedBox(height: 20),
             TextField(
@@ -311,36 +297,74 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
+  /// ✅ Aquí está el botón actualizado con "Pagar en efectivo"
   Widget _buildPaymentButton(ColorScheme colorScheme) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _loading ? null : _processPayment,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1D3557),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+    return Column(
+      children: [
+        // Botón de pago normal
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _loading ? null : _processPayment,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1D3557),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: _loading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Text(
+                    'Pagar \$88.00',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
           ),
         ),
-        child: _loading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+        const SizedBox(height: 12),
+
+        // Botón adicional “Pagar en efectivo”
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Pago en efectivo seleccionado'),
+                  backgroundColor: Colors.orange,
                 ),
-              )
-            : const Text(
-                'Pagar \$88.00',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
+              );
+              context.go('/servicio/detalles');
+            },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF1D3557),
+              side: const BorderSide(color: Color(0xFF1D3557), width: 2),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-      ),
+            ),
+            child: const Text(
+              'Pagar en efectivo',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -350,19 +374,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Colors.grey,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: const TextStyle(color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );

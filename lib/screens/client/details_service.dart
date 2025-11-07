@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'nav_bar.dart';
 
 class DetailsServicePage extends StatelessWidget {
   static const String name = 'DetailsServicePage';
@@ -200,7 +201,9 @@ class DetailsServicePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: () {
+              context.go('/dejar-resena');
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -212,20 +215,7 @@ class DetailsServicePage extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Inicio"),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Buscar"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: "Mis Servicios",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Perfil"),
-        ],
-      ),
+      bottomNavigationBar: const NavBar(currentIndex: 2),
     );
   }
 }

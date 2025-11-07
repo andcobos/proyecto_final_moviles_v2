@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../home/nav_bar.dart' as customNavBar;
+import 'nav_bar.dart' as customNavBar;
 
 class ServiceCompletedPage extends StatelessWidget {
   const ServiceCompletedPage({super.key});

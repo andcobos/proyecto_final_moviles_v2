@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart';
+import 'nav_bar.dart';
 
 class UserSettingsScreen extends StatelessWidget {
   const UserSettingsScreen({super.key});
@@ -15,12 +15,12 @@ class UserSettingsScreen extends StatelessWidget {
 
     return Scaffold(
       // 5. Agregar la barra de navegación inferior de la imagen
-      bottomNavigationBar: const NavBar(currentIndex: 3), // Asumiendo 'Perfil' es el índice 3
+      bottomNavigationBar: const NavBar(currentIndex: -1), // Asumiendo 'Perfil' es el índice 3
       
       appBar: AppBar(
         // 3. Ajuste de diseño del AppBar
         backgroundColor: Colors.white,
-        elevation: 0, // Remover la sombra
+        elevation: 0, 
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black), // Ícono negro
           onPressed: () => context.pop(),

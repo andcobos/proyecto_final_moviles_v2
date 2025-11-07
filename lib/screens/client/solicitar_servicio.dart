@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart';
+import 'nav_bar.dart';
 
 class SolicitarServicioPage extends StatefulWidget {
   const SolicitarServicioPage({super.key});

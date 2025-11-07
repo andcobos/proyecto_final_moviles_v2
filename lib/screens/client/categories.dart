@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../home/nav_bar.dart';
+import 'nav_bar.dart';
 
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
@@ -104,6 +104,19 @@ class CategoriesPage extends StatelessWidget {
               const SizedBox(height: 24),
             ],
           ),
+        ),
+      ),
+
+      // Botón flotante para solicitar servicio
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.go('/solicitar-servicio');
+        },
+        backgroundColor: const Color(0xFF0D2B45),
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text(
+          'Solicitar Servicio',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -221,7 +234,7 @@ class _RecommendedTile extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Texto (con límites de líneas para evitar “vertical letters”)
+              // Texto (con límites de líneas para evitar "vertical letters")
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
