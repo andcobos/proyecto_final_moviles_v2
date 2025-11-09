@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user.dart';
 
-class ClientRegisterPage extends StatefulWidget {
+class ClientRegisterPage extends ConsumerStatefulWidget {
   static const name = 'ClientRegisterPage';
   const ClientRegisterPage({super.key});
 
   @override
-  State<ClientRegisterPage> createState() => _ClientRegisterPageState();
+  ConsumerState<ClientRegisterPage> createState() => _ClientRegisterPageState();
 }
 
-class _ClientRegisterPageState extends State<ClientRegisterPage> {
+class _ClientRegisterPageState extends ConsumerState<ClientRegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -47,24 +49,49 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
   Future<void> _onSubmit() async {
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) return;
-    setState(() => _loading = true);
 
-    // TODO: integrar backend: POST /auth/register (role=client)
-    await Future.delayed(const Duration(milliseconds: 900));
+    try {
+      // Parse name into firstName and lastName
+      final nameParts = _nameCtrl.text.trim().split(' ');
+      final firstName = nameParts.first;
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-    if (mounted) {
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registro cliente OK (demo)')),
+      // Create register request
+      final request = RegisterRequest(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+        firstName: firstName,
+        lastName: lastName.isEmpty ? firstName : lastName,
+        role: 'CLIENT',
       );
-      // Puedes mandar directo a login o a onboarding:
-      context.go('/auth/client/login');
+
+      // Register and login
+      await ref.read(authProvider.notifier).register(request);
+
+      if (mounted) {
+        // Navigate to client home
+        context.go('/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('¡Bienvenido $firstName!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // Fondo gris claro
@@ -200,18 +227,18 @@ class _ClientRegisterPageState extends State<ClientRegisterPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _loading ? null : _onSubmit,
+                              onPressed: isLoading ? null : _onSubmit,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 backgroundColor: const Color(0xFF1D3557), // Azul oscuro
                                 foregroundColor: Colors.white,
                               ),
-                              child: _loading
+                              child: isLoading
                                   ? const SizedBox(
                                       height: 20, width: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Text('Registrarse', 
+                                  : const Text('Registrarse',
                                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                             ),
                           ),

@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
+import '../../models/user.dart';
 
-class ProviderRegisterPage extends StatefulWidget {
+class ProviderRegisterPage extends ConsumerStatefulWidget {
   static const name = 'ProviderRegisterPage';
   const ProviderRegisterPage({super.key});
 
   @override
-  State<ProviderRegisterPage> createState() => _ProviderRegisterPageState();
+  ConsumerState<ProviderRegisterPage> createState() => _ProviderRegisterPageState();
 }
 
-class _ProviderRegisterPageState extends State<ProviderRegisterPage> {
+class _ProviderRegisterPageState extends ConsumerState<ProviderRegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _professionCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -56,25 +58,48 @@ class _ProviderRegisterPageState extends State<ProviderRegisterPage> {
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) return;
 
-    setState(() => _loading = true);
+    try {
+      // Parse name into firstName and lastName
+      final nameParts = _nameCtrl.text.trim().split(' ');
+      final firstName = nameParts.first;
+      final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
 
-    // TODO: integrar backend: POST /auth/register (role=provider)
-    // Campos típicos: name, email, password, role='provider', profession
-    await Future.delayed(const Duration(milliseconds: 900));
+      // Create register request
+      final request = RegisterRequest(
+        email: _emailCtrl.text.trim(),
+        password: _passCtrl.text,
+        firstName: firstName,
+        lastName: lastName.isEmpty ? firstName : lastName,
+        role: 'CONTRACTOR',
+      );
 
-    if (!mounted) return;
-    setState(() => _loading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Registro proveedor OK (demo)')),
-    );
+      // Register and login
+      await ref.read(authProvider.notifier).register(request);
 
-    // Después de registrarse, envía al login proveedor:
-    context.go('/auth/provider/login');
+      if (mounted) {
+        // Navigate to contractor home
+        context.go('/pro/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('¡Bienvenido $firstName! No olvides agregar tus servicios.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -161,13 +186,13 @@ class _ProviderRegisterPageState extends State<ProviderRegisterPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _loading ? null : _onSubmit,
+                            onPressed: isLoading ? null : _onSubmit,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               backgroundColor: const Color(0xFF1D3557),
                             ),
-                            child: _loading
+                            child: isLoading
                                 ? const SizedBox(
                                     height: 20, width: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
