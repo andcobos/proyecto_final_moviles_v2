@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:proyecto_final_moviles/screens/client/nav_bar.dart';
+import 'package:proyecto_final_moviles/presentation/screens/client/nav_bar.dart';
 
 class MyServicesPage extends StatelessWidget {
   const MyServicesPage({super.key});
