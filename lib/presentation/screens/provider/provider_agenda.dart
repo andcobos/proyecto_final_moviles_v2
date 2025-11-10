@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/models/job.dart';
 import 'provider_nav_bar.dart';
+import 'provider_jobs.dart'; // tu provider de trabajos
 
-class ProviderAgendaScreen extends StatefulWidget {
+class ProviderAgendaScreen extends ConsumerStatefulWidget {
   const ProviderAgendaScreen({super.key});
   static const String name = 'ProviderAgendaScreen';
 
   @override
-  State<ProviderAgendaScreen> createState() => _ProviderAgendaScreenState();
+  ConsumerState<ProviderAgendaScreen> createState() =>
+      _ProviderAgendaScreenState();
 }
 
-class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
+class _ProviderAgendaScreenState extends ConsumerState<ProviderAgendaScreen> {
   DateTime selectedDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final jobsAsync = ref.watch(contractorActiveJobsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,146 +37,165 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Calendario mensual
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    // Header del calendario
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "${_getMonthName(selectedDate.month)} ${selectedDate.year}",
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.chevron_left),
-                              onPressed: () {
-                                setState(() {
-                                  selectedDate = DateTime(
-                                    selectedDate.year,
-                                    selectedDate.month - 1,
-                                  );
-                                });
-                              },
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.chevron_right),
-                              onPressed: () {
-                                setState(() {
-                                  selectedDate = DateTime(
-                                    selectedDate.year,
-                                    selectedDate.month + 1,
-                                  );
-                                });
-                              },
-                            ),
-                          ],
+      body: jobsAsync.when(
+        data: (jobs) {
+          // Filtramos solo los aceptados
+          final acceptedJobs =
+              jobs.where((job) => job.status == JobStatus.accepted).toList();
+
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Calendario
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    // Grid del calendario
-                    _buildCalendarGrid(),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+                    child: Column(
+                      children: [
+                        _buildCalendarHeader(),
+                        const SizedBox(height: 16),
+                        _buildCalendarGrid(acceptedJobs),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
-              // Citas programadas
-              const Text(
-                "Citas Programadas",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // Citas programadas
+                  const Text(
+                    "Citas Programadas",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildAppointmentsList(acceptedJobs),
+                ],
               ),
-              const SizedBox(height: 12),
-              _buildScheduledAppointments(),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text("Error al cargar agenda: $e")),
       ),
       bottomNavigationBar: const ProviderNavBar(currentIndex: 3),
     );
   }
 
-  Widget _buildCalendarGrid() {
+  // --- UI helpers ---
+
+  Widget _buildCalendarHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          "${_getMonthName(selectedDate.month)} ${selectedDate.year}",
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Row(
+          children: [
+            IconButton(
+              icon: const Icon(Icons.chevron_left),
+              onPressed: () {
+                setState(() {
+                  selectedDate = DateTime(
+                    selectedDate.year,
+                    selectedDate.month - 1,
+                  );
+                });
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.chevron_right),
+              onPressed: () {
+                setState(() {
+                  selectedDate = DateTime(
+                    selectedDate.year,
+                    selectedDate.month + 1,
+                  );
+                });
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCalendarGrid(List<Job> jobs) {
     final firstDayOfMonth = DateTime(selectedDate.year, selectedDate.month, 1);
-    final lastDayOfMonth = DateTime(selectedDate.year, selectedDate.month + 1, 0);
+    final lastDayOfMonth =
+        DateTime(selectedDate.year, selectedDate.month + 1, 0);
     final firstWeekday = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
-    // Días de la semana
     final weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
     return Column(
       children: [
-        // Header de días de la semana
         Row(
-          children: weekDays.map((day) => Expanded(
-            child: Center(
-              child: Text(
-                day,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade600,
+          children: weekDays
+              .map(
+                (day) => Expanded(
+                  child: Center(
+                    child: Text(
+                      day,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          )).toList(),
+              )
+              .toList(),
         ),
         const SizedBox(height: 8),
-        // Grid de días
         ...List.generate(6, (weekIndex) {
           return Row(
             children: List.generate(7, (dayIndex) {
               final dayNumber = weekIndex * 7 + dayIndex - firstWeekday + 2;
-              
               if (dayNumber < 1 || dayNumber > daysInMonth) {
                 return const Expanded(child: SizedBox(height: 40));
               }
 
               final isToday = DateTime.now().year == selectedDate.year &&
-                             DateTime.now().month == selectedDate.month &&
-                             DateTime.now().day == dayNumber;
+                  DateTime.now().month == selectedDate.month &&
+                  DateTime.now().day == dayNumber;
 
-              final hasAppointment = _hasAppointment(dayNumber);
+              final hasJob = jobs.any((job) =>
+                  job.createdAt.year == selectedDate.year &&
+                  job.createdAt.month == selectedDate.month &&
+                  job.createdAt.day == dayNumber);
 
               return Expanded(
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
-                      selectedDate = DateTime(selectedDate.year, selectedDate.month, dayNumber);
+                      selectedDate = DateTime(
+                          selectedDate.year, selectedDate.month, dayNumber);
                     });
                   },
                   child: Container(
                     height: 40,
                     margin: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
-                      color: isToday 
+                      color: isToday
                           ? const Color(0xFF1D3557)
-                          : hasAppointment 
+                          : hasJob
                               ? Colors.orange.shade100
                               : Colors.transparent,
                       borderRadius: BorderRadius.circular(8),
@@ -180,14 +204,13 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
                       child: Text(
                         '$dayNumber',
                         style: TextStyle(
-                          color: isToday 
+                          color: isToday
                               ? Colors.white
-                              : hasAppointment 
+                              : hasJob
                                   ? Colors.orange.shade800
                                   : Colors.black,
-                          fontWeight: isToday || hasAppointment 
-                              ? FontWeight.bold 
-                              : FontWeight.normal,
+                          fontWeight:
+                              isToday || hasJob ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -201,8 +224,11 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
     );
   }
 
-  Widget _buildScheduledAppointments() {
-    final appointments = _getAppointmentsForDate(selectedDate);
+  Widget _buildAppointmentsList(List<Job> jobs) {
+    final appointments = jobs.where((job) =>
+        job.createdAt.year == selectedDate.year &&
+        job.createdAt.month == selectedDate.month &&
+        job.createdAt.day == selectedDate.day);
 
     if (appointments.isEmpty) {
       return Container(
@@ -216,19 +242,11 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
             Icon(Icons.event_available, size: 48, color: Colors.grey.shade400),
             const SizedBox(height: 12),
             Text(
-              "No hay citas programadas",
+              "No hay trabajos programados",
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
                 fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "para el ${selectedDate.day} de ${_getMonthName(selectedDate.month)}",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
               ),
             ),
           ],
@@ -237,106 +255,73 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
     }
 
     return Column(
-      children: appointments.map((appointment) => 
-        _buildAppointmentCard(appointment)
-      ).toList(),
-    );
-  }
-
-  Widget _buildAppointmentCard(Map<String, dynamic> appointment) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: appointment['color'].withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                appointment['icon'],
-                color: appointment['color'],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    appointment['service'],
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+      children: appointments
+          .map(
+            (job) => Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.build,
+                          color: Colors.orange, size: 24),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Cliente: ${appointment['client']}",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            job.description,
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Cliente ID: ${job.clientId}",
+                            style: TextStyle(
+                                fontSize: 14, color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Servicio ID: ${job.serviceId}",
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.access_time, size: 14, color: Colors.grey.shade500),
-                      const SizedBox(width: 4),
-                      Text(
-                        appointment['time'],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        job.status.displayName,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade500,
+                          color: Colors.green.shade800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, size: 14, color: Colors.grey.shade500),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          appointment['address'],
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: appointment['statusColor'].withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                appointment['status'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: appointment['statusColor'],
-                  fontWeight: FontWeight.w600,
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
-      ),
+          )
+          .toList(),
     );
   }
 
@@ -344,7 +329,7 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
-      firstDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (picked != null) {
@@ -360,53 +345,5 @@ class _ProviderAgendaScreenState extends State<ProviderAgendaScreen> {
       'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
     return months[month - 1];
-  }
-
-  bool _hasAppointment(int day) {
-    // Simular citas en ciertos días
-    final appointments = [15, 18, 22, 25, 28];
-    return appointments.contains(day);
-  }
-
-  List<Map<String, dynamic>> _getAppointmentsForDate(DateTime date) {
-    // Simular citas para la fecha seleccionada
-    if (date.day == 15) {
-      return [
-        {
-          'service': 'Reparación de tuberías',
-          'client': 'Sofía Ramírez',
-          'time': '10:00 AM',
-          'address': 'Calle Principal 123',
-          'status': 'Pendiente',
-          'statusColor': Colors.orange,
-          'color': Colors.blue,
-          'icon': Icons.plumbing,
-        },
-        {
-          'service': 'Instalación eléctrica',
-          'client': 'Carlos Mendoza',
-          'time': '2:00 PM',
-          'address': 'Avenida Central 456',
-          'status': 'Confirmado',
-          'statusColor': Colors.green,
-          'color': Colors.orange,
-          'icon': Icons.electrical_services,
-        },
-      ];
-    } else if (date.day == 18) {
-      return [
-        {
-          'service': 'Mantenimiento de jardín',
-          'client': 'Ana López',
-          'time': '9:00 AM',
-          'address': 'Calle Secundaria 789',
-          'status': 'Confirmado',
-          'statusColor': Colors.green,
-          'color': Colors.green,
-          'icon': Icons.local_florist,
-        },
-      ];
-    }
-    return [];
   }
 }

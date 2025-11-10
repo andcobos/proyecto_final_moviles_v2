@@ -18,11 +18,13 @@ class Service {
   /// Create Service from JSON response
   factory Service.fromJson(Map<String, dynamic> json) {
     return Service(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      rate: (json['rate'] as num).toDouble(),
-      contractorId: json['contractorId'] as String,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Sin nombre',
+      description: json['description']?.toString() ?? 'Sin descripción',
+      rate: (json['rate'] is num)
+          ? (json['rate'] as num).toDouble()
+          : double.tryParse(json['rate']?.toString() ?? '0') ?? 0.0,
+      contractorId: json['contractorId']?.toString() ?? '',
     );
   }
 

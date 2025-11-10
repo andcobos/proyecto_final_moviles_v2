@@ -12,11 +12,11 @@ class ApiConstants {
   static const String register = '/auth/register';
   static const String userProfile = '/users/me';
   static const String updateServices = '/users/me/services';
+  static const String users = '/users'; 
   static const String contractors = '/workers';
   static const String jobs = '/jobs';
   static const String reviews = '/reviews';
   static const String services = '/workers';
-
 
   // Helper methods
   static String contractorById(String id) => '/workers/$id';

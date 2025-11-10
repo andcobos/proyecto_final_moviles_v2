@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import 'provider_nav_bar.dart';
+import '../../providers/service_provider.dart';
 
 class ProviderProfileScreen extends ConsumerWidget {
   const ProviderProfileScreen({super.key});
@@ -12,19 +13,21 @@ class ProviderProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-
-    // 🟢 Obtenemos el usuario actual desde el provider
+    final servicesAsync = ref.watch(contractorServicesProvider);
     final user = ref.watch(currentUserProvider);
     final userName = user?.fullName ?? "Usuario";
 
     // 🎨 Colores adaptativos
-    final backgroundColor =
-        isDarkMode ? const Color(0xFF121212) : Colors.grey.shade100;
+    final backgroundColor = isDarkMode
+        ? const Color(0xFF121212)
+        : Colors.grey.shade100;
     final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-    final primaryTextColor =
-        isDarkMode ? Colors.white : const Color(0xFF1D3557);
-    final secondaryTextColor =
-        isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
+    final primaryTextColor = isDarkMode
+        ? Colors.white
+        : const Color(0xFF1D3557);
+    final secondaryTextColor = isDarkMode
+        ? Colors.grey.shade400
+        : Colors.grey.shade600;
     final accentColor = const Color(0xFF1D3557);
 
     return Scaffold(
@@ -73,13 +76,12 @@ class ProviderProfileScreen extends ConsumerWidget {
                       backgroundImage: NetworkImage(
                         'https://source.unsplash.com/random/?portrait,face&sig=${DateTime.now().millisecondsSinceEpoch}',
                       ),
-                      backgroundColor:
-                          Colors.grey.shade200,
+                      backgroundColor: Colors.grey.shade200,
                     ),
 
                     const SizedBox(height: 16),
                     Text(
-                      userName, 
+                      userName,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -88,22 +90,36 @@ class ProviderProfileScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Electricista • 4.8 ⭐ • 124 reseñas',
-                      style:
-                          TextStyle(fontSize: 14, color: secondaryTextColor),
+                      'Contratista • 4.8 ⭐ • 124 reseñas',
+                      style: TextStyle(fontSize: 14, color: secondaryTextColor),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
                         Expanded(
-                            child: _buildStatItem('Trabajos', '156',
-                                primaryTextColor, secondaryTextColor)),
+                          child: _buildStatItem(
+                            'Trabajos',
+                            '20',
+                            primaryTextColor,
+                            secondaryTextColor,
+                          ),
+                        ),
                         Expanded(
-                            child: _buildStatItem('Clientes', '89',
-                                primaryTextColor, secondaryTextColor)),
+                          child: _buildStatItem(
+                            'Clientes',
+                            '8',
+                            primaryTextColor,
+                            secondaryTextColor,
+                          ),
+                        ),
                         Expanded(
-                            child: _buildStatItem('Años Exp.', '8',
-                                primaryTextColor, secondaryTextColor)),
+                          child: _buildStatItem(
+                            'Años Exp.',
+                            '2',
+                            primaryTextColor,
+                            secondaryTextColor,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -124,7 +140,8 @@ class ProviderProfileScreen extends ConsumerWidget {
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -135,19 +152,51 @@ class ProviderProfileScreen extends ConsumerWidget {
               _buildSection(
                 title: 'Servicios Ofrecidos',
                 children: [
-                  _buildServiceChip(
-                      'Reparaciones Eléctricas', accentColor, isDarkMode),
-                  _buildServiceChip(
-                      'Instalaciones', accentColor, isDarkMode),
-                  _buildServiceChip(
-                      'Mantenimiento', accentColor, isDarkMode),
-                  _buildServiceChip(
-                      'Consultoría', accentColor, isDarkMode),
+                  // 👇 Este es el único hijo dentro de children
+                  servicesAsync.when(
+                    data: (services) {
+                      if (services.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            "Aún no tienes servicios registrados.",
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        );
+                      }
+
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: services
+                            .map(
+                              (s) => _buildServiceChip(
+                                s.name,
+                                accentColor,
+                                isDarkMode,
+                              ),
+                            )
+                            .toList(),
+                      );
+                    },
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (err, _) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        "Error al cargar servicios: $err",
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
+                  ),
                 ],
                 cardColor: cardColor,
                 primaryTextColor: primaryTextColor,
                 isDarkMode: isDarkMode,
               ),
+
 
               const SizedBox(height: 24),
 
@@ -388,7 +437,7 @@ class ProviderProfileScreen extends ConsumerWidget {
               'Sofía G.',
               'Hace 2 semanas',
               5,
-              'Ricardo hizo un trabajo excelente en mi casa. Muy profesional y eficiente.',
+              'Hizo un trabajo excelente en mi casa. Muy profesional y eficiente.',
               isDarkMode),
           const SizedBox(height: 12),
           _buildTestimonialCard('Carlos R.', 'Hace 1 mes', 4,
