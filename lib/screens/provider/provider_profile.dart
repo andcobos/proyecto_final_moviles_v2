@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 import 'provider_nav_bar.dart';
 
-class ProviderProfileScreen extends StatelessWidget {
+class ProviderProfileScreen extends ConsumerWidget {
   const ProviderProfileScreen({super.key});
   static const String name = 'ProviderProfileScreen';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    final backgroundColor = isDarkMode ? const Color(0xFF121212) : Colors.grey.shade100;
+    // 🟢 Obtenemos el usuario actual desde el provider
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.fullName ?? "Usuario";
+
+    // 🎨 Colores adaptativos
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF121212) : Colors.grey.shade100;
     final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-    final primaryTextColor = isDarkMode ? Colors.white : const Color(0xFF1D3557);
-    final secondaryTextColor = isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
+    final primaryTextColor =
+        isDarkMode ? Colors.white : const Color(0xFF1D3557);
+    final secondaryTextColor =
+        isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600;
     final accentColor = const Color(0xFF1D3557);
 
     return Scaffold(
@@ -41,6 +51,7 @@ class ProviderProfileScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
+              // 🔹 Tarjeta principal de perfil
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -57,15 +68,18 @@ class ProviderProfileScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const CircleAvatar(
+                    CircleAvatar(
                       radius: 50,
                       backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=800',
+                        'https://source.unsplash.com/random/?portrait,face&sig=${DateTime.now().millisecondsSinceEpoch}',
                       ),
+                      backgroundColor:
+                          Colors.grey.shade200,
                     ),
+
                     const SizedBox(height: 16),
                     Text(
-                      'Ricardo Mendoza',
+                      userName, 
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -75,14 +89,21 @@ class ProviderProfileScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Electricista • 4.8 ⭐ • 124 reseñas',
-                      style: TextStyle(fontSize: 14, color: secondaryTextColor),
+                      style:
+                          TextStyle(fontSize: 14, color: secondaryTextColor),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Expanded(child: _buildStatItem('Trabajos', '156', primaryTextColor, secondaryTextColor)),
-                        Expanded(child: _buildStatItem('Clientes', '89', primaryTextColor, secondaryTextColor)),
-                        Expanded(child: _buildStatItem('Años Exp.', '8', primaryTextColor, secondaryTextColor)),
+                        Expanded(
+                            child: _buildStatItem('Trabajos', '156',
+                                primaryTextColor, secondaryTextColor)),
+                        Expanded(
+                            child: _buildStatItem('Clientes', '89',
+                                primaryTextColor, secondaryTextColor)),
+                        Expanded(
+                            child: _buildStatItem('Años Exp.', '8',
+                                primaryTextColor, secondaryTextColor)),
                       ],
                     ),
                   ],
@@ -91,6 +112,7 @@ class ProviderProfileScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
+              // 🔹 Botón editar perfil
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -101,20 +123,26 @@ class ProviderProfileScreen extends StatelessWidget {
                     backgroundColor: accentColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),
 
               const SizedBox(height: 24),
 
+              // 🔹 Servicios ofrecidos
               _buildSection(
                 title: 'Servicios Ofrecidos',
                 children: [
-                  _buildServiceChip('Reparaciones Eléctricas', accentColor, isDarkMode),
-                  _buildServiceChip('Instalaciones', accentColor, isDarkMode),
-                  _buildServiceChip('Mantenimiento', accentColor, isDarkMode),
-                  _buildServiceChip('Consultoría', accentColor, isDarkMode),
+                  _buildServiceChip(
+                      'Reparaciones Eléctricas', accentColor, isDarkMode),
+                  _buildServiceChip(
+                      'Instalaciones', accentColor, isDarkMode),
+                  _buildServiceChip(
+                      'Mantenimiento', accentColor, isDarkMode),
+                  _buildServiceChip(
+                      'Consultoría', accentColor, isDarkMode),
                 ],
                 cardColor: cardColor,
                 primaryTextColor: primaryTextColor,
@@ -123,11 +151,14 @@ class ProviderProfileScreen extends StatelessWidget {
 
               const SizedBox(height: 24),
 
+              // 🔹 Portafolio
               _buildPortfolioSection(cardColor, primaryTextColor, isDarkMode),
 
               const SizedBox(height: 24),
 
-              _buildTestimonialsSection(cardColor, primaryTextColor, secondaryTextColor, isDarkMode),
+              // 🔹 Testimonios
+              _buildTestimonialsSection(
+                  cardColor, primaryTextColor, secondaryTextColor, isDarkMode),
             ],
           ),
         ),
@@ -136,10 +167,15 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color textColor, Color secondary) {
+  // --- Widgets auxiliares ---
+
+  Widget _buildStatItem(
+      String label, String value, Color textColor, Color secondary) {
     return Column(
       children: [
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+        Text(value,
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
         const SizedBox(height: 4),
         Text(label, style: TextStyle(fontSize: 12, color: secondary)),
       ],
@@ -172,7 +208,10 @@ class ProviderProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryTextColor)),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryTextColor)),
           const SizedBox(height: 16),
           Wrap(spacing: 8, runSpacing: 8, children: children),
         ],
@@ -180,11 +219,14 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceChip(String service, Color accentColor, bool isDarkMode) {
+  Widget _buildServiceChip(
+      String service, Color accentColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: isDarkMode ? accentColor.withOpacity(0.25) : accentColor.withOpacity(0.1),
+        color: isDarkMode
+            ? accentColor.withOpacity(0.25)
+            : accentColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: accentColor.withOpacity(0.3)),
       ),
@@ -199,12 +241,29 @@ class ProviderProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPortfolioSection(Color cardColor, Color textColor, bool isDarkMode) {
+  Widget _buildPortfolioSection(
+      Color cardColor, Color textColor, bool isDarkMode) {
     final works = [
-      {'image': 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400', 'title': 'Instalación eléctrica'},
-      {'image': 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400', 'title': 'Reparación de panel'},
-      {'image': 'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=400', 'title': 'Cableado moderno'},
-      {'image': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400', 'title': 'Iluminación LED'},
+      {
+        'image':
+            'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400',
+        'title': 'Instalación eléctrica'
+      },
+      {
+        'image':
+            'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400',
+        'title': 'Reparación de panel'
+      },
+      {
+        'image':
+            'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=400',
+        'title': 'Cableado moderno'
+      },
+      {
+        'image':
+            'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400',
+        'title': 'Iluminación LED'
+      },
     ];
 
     return Container(
@@ -230,66 +289,78 @@ class ProviderProfileScreen extends StatelessWidget {
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: textColor,
-                )),
-            TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.add, size: 16),
-              label: const Text('Agregar'),
-            ),
-          ]),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.add, size: 16),
+                label: const Text('Agregar'),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 160, 
+            height: 175, 
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: works.length,
               separatorBuilder: (_, __) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
                 final work = works[index];
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        width: 120,
-                        height: 120,
-                        child: Image.network(
-                          work['image']!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            color: Colors.grey.shade800,
-                            child: const Icon(Icons.image_not_supported, color: Colors.white),
+                return Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 6,
+                  ), // ⬅️ margen inferior extra
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: 120,
+                          height: 120,
+                          child: Image.network(
+                            work['image']!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.grey.shade800,
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: 120,
-                      child: Text(
-                        work['title']!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 120,
+                        child: Text(
+                          work['title']!,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
           ),
+
         ],
       ),
     );
   }
 
-  Widget _buildTestimonialsSection(Color cardColor, Color textColor, Color secondary, bool isDarkMode) {
+  Widget _buildTestimonialsSection(Color cardColor, Color textColor,
+      Color secondary, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -308,23 +379,34 @@ class ProviderProfileScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Testimonios',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textColor)),
           const SizedBox(height: 16),
-          _buildTestimonialCard('Sofía G.', 'Hace 2 semanas', 5,
-              'Ricardo hizo un trabajo excelente en mi casa. Muy profesional y eficiente.', isDarkMode),
+          _buildTestimonialCard(
+              'Sofía G.',
+              'Hace 2 semanas',
+              5,
+              'Ricardo hizo un trabajo excelente en mi casa. Muy profesional y eficiente.',
+              isDarkMode),
           const SizedBox(height: 12),
           _buildTestimonialCard('Carlos R.', 'Hace 1 mes', 4,
               'Buen servicio, aunque hubo un pequeño retraso.', isDarkMode),
           const SizedBox(height: 12),
-          _buildTestimonialCard('Ana M.', 'Hace 2 meses', 5,
-              'Excelente profesional, muy recomendado. Trabajo de calidad.', isDarkMode),
+          _buildTestimonialCard(
+              'Ana M.',
+              'Hace 2 meses',
+              5,
+              'Excelente profesional, muy recomendado. Trabajo de calidad.',
+              isDarkMode),
         ],
       ),
     );
   }
 
-  Widget _buildTestimonialCard(
-      String name, String time, int rating, String comment, bool isDarkMode) {
+  Widget _buildTestimonialCard(String name, String time, int rating,
+      String comment, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -340,7 +422,8 @@ class ProviderProfileScreen extends StatelessWidget {
               backgroundColor:
                   isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
               child: Text(name[0],
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 12)),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -351,9 +434,11 @@ class ProviderProfileScreen extends StatelessWidget {
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
-                          color: isDarkMode ? Colors.white : Colors.black)),
+                          color:
+                              isDarkMode ? Colors.white : Colors.black)),
                   Text(time,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      style: TextStyle(
+                          fontSize: 12, color: Colors.grey.shade500)),
                 ],
               ),
             ),
@@ -372,7 +457,8 @@ class ProviderProfileScreen extends StatelessWidget {
           Text(comment,
               style: TextStyle(
                   fontSize: 14,
-                  color: isDarkMode ? Colors.white70 : Colors.grey.shade700)),
+                  color:
+                      isDarkMode ? Colors.white70 : Colors.grey.shade700)),
         ],
       ),
     );

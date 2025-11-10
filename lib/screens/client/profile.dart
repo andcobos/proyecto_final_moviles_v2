@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 import 'nav_bar.dart' as customNavBar;
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
   static const String name = 'ProfilePage';
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
+
+    // ✅ Obtenemos el usuario autenticado desde Riverpod
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.fullName ?? "Usuario";
 
     return Scaffold(
       appBar: AppBar(
@@ -35,19 +40,23 @@ class ProfilePage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const CircleAvatar(
+              // ✅ Imagen de perfil dinámica desde Unsplash
+              CircleAvatar(
                 radius: 48,
                 backgroundImage: NetworkImage(
-                  'https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=800',
+                  'https://source.unsplash.com/random/?portrait,face&sig=${DateTime.now().millisecondsSinceEpoch}',
                 ),
               ),
               const SizedBox(height: 12),
+
+              // ✅ Nombre del usuario conectado
               Text(
-                'Sofía Ramírez',
+                userName,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
+
               Text(
                 'Servicios del Hogar',
                 style: textTheme.bodyMedium?.copyWith(
@@ -56,19 +65,19 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // Servicios Agendados
-              _SectionHeader('Servicios Agendados'),
+              // Sección: Servicios agendados
+              const _SectionHeader('Servicios Agendados'),
               const _ServiceList(),
               const SizedBox(height: 20),
 
-              // Portafolio
-              _SectionHeader('Portafolio'),
+              // Sección: Portafolio
+              const _SectionHeader('Portafolio'),
               const SizedBox(height: 8),
               const _PortfolioList(),
               const SizedBox(height: 20),
 
-              // Testimonios
-              _SectionHeader('Testimonios'),
+              // Sección: Testimonios
+              const _SectionHeader('Testimonios'),
               const SizedBox(height: 12),
               const _TestimonialCard(
                 avatarUrl:
@@ -91,6 +100,7 @@ class ProfilePage extends StatelessWidget {
   }
 }
 
+// 📌 Sección de encabezados
 class _SectionHeader extends StatelessWidget {
   final String text;
   const _SectionHeader(this.text);
@@ -109,7 +119,7 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-// LISTA DE SERVICIOS AGENDADOS
+// 📌 Lista de servicios agendados
 class _ServiceList extends StatelessWidget {
   const _ServiceList();
 
@@ -138,16 +148,25 @@ class _ServiceList extends StatelessWidget {
   }
 }
 
-// PORTAFOLIO
+// 📌 Sección de portafolio
 class _PortfolioList extends StatelessWidget {
   const _PortfolioList();
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800', 'Sala de estar moderna'],
-      ['https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800', 'Cocina minimalista'],
-      ['https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=800', 'Baño elegante'],
+      [
+        'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800',
+        'Sala de estar moderna'
+      ],
+      [
+        'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800',
+        'Cocina minimalista'
+      ],
+      [
+        'https://images.unsplash.com/photo-1493666438817-866a91353ca9?w=800',
+        'Baño elegante'
+      ],
     ];
 
     return SizedBox(
@@ -167,7 +186,7 @@ class _PortfolioList extends StatelessWidget {
                   width: 160,
                   height: 110,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _fallbackImg(160,110),
+                  errorBuilder: (_, __, ___) => _fallbackImg(160, 110),
                 ),
               ),
               const SizedBox(height: 6),
@@ -187,7 +206,7 @@ class _PortfolioList extends StatelessWidget {
   }
 }
 
-// TESTIMONIOS
+// 📌 Sección de testimonios
 class _TestimonialCard extends StatelessWidget {
   final String avatarUrl;
   final String name;
@@ -225,7 +244,11 @@ class _TestimonialCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      name,
+                      style: textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
                     Text(when, style: TextStyle(color: Colors.grey.shade600)),
                   ],
                 ),
@@ -233,11 +256,14 @@ class _TestimonialCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Row(
-              children: List.generate(5, (i) => Icon(
-                i < rating ? Icons.star : Icons.star_border,
-                size: 18,
-                color: Colors.amber.shade700,
-              )),
+              children: List.generate(
+                5,
+                (i) => Icon(
+                  i < rating ? Icons.star : Icons.star_border,
+                  size: 18,
+                  color: Colors.amber.shade700,
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             Text(comment, style: textTheme.bodyMedium),
@@ -260,6 +286,7 @@ class _TestimonialCard extends StatelessWidget {
   }
 }
 
+// 📦 Imagen de respaldo si no carga la URL
 Widget _fallbackImg(double w, double h) {
   return Container(
     width: w,

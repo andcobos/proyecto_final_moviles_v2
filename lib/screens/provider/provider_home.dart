@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/theme_provider.dart';
 import 'provider_nav_bar.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 
 class ProviderHomeScreen extends ConsumerWidget {
   const ProviderHomeScreen({super.key});
@@ -11,6 +12,7 @@ class ProviderHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeNotifierProvider).isDarkMode;
+    final user = ref.watch(currentUserProvider);
 
     // Colores adaptativos
     final primaryText = isDarkMode ? Colors.white : Colors.black;
@@ -22,6 +24,8 @@ class ProviderHomeScreen extends ConsumerWidget {
         isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200;
     final boxShadowColor =
         isDarkMode ? Colors.transparent : Colors.black.withOpacity(0.05);
+    final userName = user?.fullName ?? "Usuario";
+
 
     return Scaffold(
       appBar: AppBar(
@@ -41,7 +45,7 @@ class ProviderHomeScreen extends ConsumerWidget {
         child: ListView(
           children: [
             Text(
-              "Hola, Ricardo",
+              "Hola, $userName",
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,

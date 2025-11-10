@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/theme_provider.dart';
-import 'nav_bar.dart' as customNavBar;
 import 'package:go_router/go_router.dart';
+import '../../providers/theme_provider.dart';
+import '../../providers/auth_provider.dart'; // ✅ Importamos el auth provider
+import 'nav_bar.dart' as customNavBar;
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,10 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeNotifierProvider).isDarkMode;
+
+    // ✅ Obtenemos el usuario desde el authProvider
+    final user = ref.watch(currentUserProvider);
+    final userName = user?.fullName ?? "Usuario";
 
     return Scaffold(
       appBar: AppBar(
@@ -30,13 +35,17 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            const Text(
-              "Hola, Sofía",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            // ✅ Nombre dinámico
+            Text(
+              "Hola, $userName",
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 12),
 
-            // Search bar
+            // 🔍 Barra de búsqueda
             TextField(
               decoration: InputDecoration(
                 hintText: "Buscar servicios",
@@ -52,7 +61,7 @@ class HomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // Dark Mode Switch
+            // 🌙 Modo oscuro
             SwitchListTile(
               title: const Text("Modo oscuro"),
               value: isDarkMode,
@@ -63,7 +72,7 @@ class HomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // Current Service Requests
+            // 🧾 Pedidos actuales
             const Text(
               "Pedidos actuales",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -83,7 +92,6 @@ class HomeScreen extends ConsumerWidget {
                     "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400",
                   ),
                   const SizedBox(width: 12),
-
                   _currentServiceCard(
                     "Fontanero",
                     "Carlos Mendoza",
@@ -92,7 +100,6 @@ class HomeScreen extends ConsumerWidget {
                     "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400",
                   ),
                   const SizedBox(width: 12),
-
                   _currentServiceCard(
                     "Electricista",
                     "Roberto Silva",
@@ -106,7 +113,7 @@ class HomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Featured Offers
+            // 🎯 Ofertas destacadas
             const Text(
               "Ofertas destacadas",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -135,13 +142,14 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  // 🧱 Tarjeta de servicio actual
   Widget _currentServiceCard(
-      String service,
-      String professional,
-      String time,
-      String description,
-      String imageUrl
-      ) {
+    String service,
+    String professional,
+    String time,
+    String description,
+    String imageUrl,
+  ) {
     return SizedBox(
       width: 160,
       child: Card(
@@ -152,7 +160,8 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.cover,
@@ -173,22 +182,26 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Text(
                     service,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     professional,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    style:
+                        TextStyle(color: Colors.grey.shade600, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     time,
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 11),
+                    style:
+                        TextStyle(color: Colors.grey.shade500, fontSize: 11),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 11),
+                    style:
+                        TextStyle(color: Colors.grey.shade700, fontSize: 11),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -201,12 +214,13 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  // 🏷️ Tarjeta de oferta
   Widget _offerCard(
-      String title,
-      String description,
-      String imageUrl,
-      String badge
-      ) {
+    String title,
+    String description,
+    String imageUrl,
+    String badge,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -215,7 +229,8 @@ class HomeScreen extends ConsumerWidget {
         child: Row(
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(16)),
               child: Image.network(
                 imageUrl,
                 width: 120,
@@ -231,7 +246,6 @@ class HomeScreen extends ConsumerWidget {
                 },
               ),
             ),
-
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -240,7 +254,8 @@ class HomeScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1D3557),
                         borderRadius: BorderRadius.circular(10),
@@ -258,7 +273,8 @@ class HomeScreen extends ConsumerWidget {
                     Flexible(
                       child: Text(
                         title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 13),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -267,7 +283,8 @@ class HomeScreen extends ConsumerWidget {
                     Flexible(
                       child: Text(
                         description,
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 11),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
