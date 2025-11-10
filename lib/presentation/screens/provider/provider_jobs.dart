@@ -5,27 +5,35 @@ import '../../providers/auth_provider.dart';
 import '../../../data/services/job_service.dart';
 import 'provider_nav_bar.dart';
 
-final contractorJobsProvider = FutureProvider<List<Job>>((ref) async {
+final contractorActiveJobsProvider = FutureProvider<List<Job>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
 
   final allJobs = await JobService().getJobs();
 
   final myJobs = allJobs.where((job) {
-    return job.contractorId == user.id;
+    final isMine = job.contractorId.toString() == user.id.toString();
+    final isActive = [
+      JobStatus.pending,
+      JobStatus.accepted,
+    ].contains(job.status);
+    return isMine && isActive;
   }).toList();
 
   return myJobs;
 });
 
 
+
+/// Pantalla principal de trabajos asignados al contratista
 class ProviderJobsScreen extends ConsumerWidget {
   const ProviderJobsScreen({super.key});
   static const String name = 'ProviderJobsScreen';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final jobsAsync = ref.watch(contractorJobsProvider);
+    // 👇 Cambiado: ahora usamos contractorActiveJobsProvider
+    final jobsAsync = ref.watch(contractorActiveJobsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -40,7 +48,7 @@ class ProviderJobsScreen extends ConsumerWidget {
           data: (jobs) {
             if (jobs.isEmpty) {
               return const Center(
-                child: Text("No tienes trabajos asignados por ahora."),
+                child: Text("No tienes trabajos activos por ahora."),
               );
             }
 
@@ -62,6 +70,7 @@ class ProviderJobsScreen extends ConsumerWidget {
   }
 }
 
+/// Tarjeta individual para cada trabajo
 class _JobCard extends ConsumerWidget {
   final Job job;
   const _JobCard({required this.job});
@@ -93,7 +102,7 @@ class _JobCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cabecera con icono y estado
+            // 🔹 Cabecera
             Row(
               children: [
                 Icon(Icons.work_outline, color: stateColor, size: 24),
@@ -125,9 +134,10 @@ class _JobCard extends ConsumerWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
 
-            // Fechas
+            // 🔹 Fechas
             Row(
               children: [
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
@@ -152,17 +162,17 @@ class _JobCard extends ConsumerWidget {
 
             const SizedBox(height: 12),
 
-            // 🔸 Acciones según estado del trabajo
+            // 🔸 Acciones según estado
             if (job.status == JobStatus.pending)
               Row(
                 children: [
-                  // 🔴 Botón Rechazar
+                  // ❌ Botón Rechazar
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
                         try {
                           await JobService().cancelJob(job.id);
-                          ref.invalidate(contractorJobsProvider);
+                          ref.invalidate(contractorActiveJobsProvider);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("Trabajo rechazado"),
@@ -189,16 +199,29 @@ class _JobCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
 
-                  // 🟢 Botón Aceptar
+                  // Botón Aceptar
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
                         try {
+                          // 1. Llamamos al backend para aceptar el trabajo
                           await JobService().acceptJob(job.id);
-                          ref.invalidate(contractorJobsProvider);
+
+                          // 2. Invalidamos el provider (limpia la caché)
+                          ref.invalidate(contractorActiveJobsProvider);
+
+                          // 3. Esperamos un momento y forzamos la recarga
+                          await Future.delayed(
+                            const Duration(milliseconds: 200),
+                          );
+                          await ref.refresh(
+                            contractorActiveJobsProvider.future,
+                          );
+
+                          // 4. Mostramos confirmación
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("Trabajo aceptado"),
+                              content: Text("✅ Trabajo aceptado correctamente"),
                               backgroundColor: Colors.green,
                             ),
                           );
@@ -219,17 +242,18 @@ class _JobCard extends ConsumerWidget {
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
+
                   ),
                 ],
               ),
 
-            // ✅ Botón “Marcar como completado”
+            // 🟩 Botón “Marcar como completado”
             if (job.status == JobStatus.accepted)
               ElevatedButton(
                 onPressed: () async {
                   try {
                     await JobService().completeJob(job.id);
-                    ref.invalidate(contractorJobsProvider);
+                    ref.invalidate(contractorActiveJobsProvider);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Trabajo completado"),
