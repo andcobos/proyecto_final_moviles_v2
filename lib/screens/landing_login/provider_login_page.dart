@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 
-class ProviderLoginPage extends StatefulWidget {
+class ProviderLoginPage extends ConsumerStatefulWidget {
   static const name = 'ProviderLoginPage';
   const ProviderLoginPage({super.key});
 
   @override
-  State<ProviderLoginPage> createState() => _ProviderLoginPageState();
+  ConsumerState<ProviderLoginPage> createState() => _ProviderLoginPageState();
 }
 
-class _ProviderLoginPageState extends State<ProviderLoginPage> {
+class _ProviderLoginPageState extends ConsumerState<ProviderLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -40,24 +41,52 @@ class _ProviderLoginPageState extends State<ProviderLoginPage> {
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) return;
 
-    setState(() => _loading = true);
+    try {
+      // Call auth provider to login
+      await ref.read(authProvider.notifier).login(
+            _emailCtrl.text.trim(),
+            _passCtrl.text,
+          );
 
-    // TODO: integrar backend: POST /auth/login (role=provider)
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    if (!mounted) return;
-    setState(() => _loading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login proveedor OK (demo)')),
-    );
-
-    // Redirigir al flujo de proveedor
-    context.go('/pro/home');
+      if (mounted) {
+        // Check if user is a contractor
+        final user = ref.read(authProvider).user;
+        if (user != null && user.isContractor) {
+          // Navigate to contractor home
+          context.go('/pro/home');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('¡Bienvenido ${user.firstName}!')),
+          );
+        } else {
+          // User is not a contractor
+          await ref.read(authProvider.notifier).logout();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Esta cuenta no es de proveedor. Usa el login de cliente.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       appBar: AppBar(
@@ -126,13 +155,13 @@ class _ProviderLoginPageState extends State<ProviderLoginPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _loading ? null : _onSubmit,
+                            onPressed: isLoading ? null : _onSubmit,
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               backgroundColor: const Color(0xFF1D3557),
                             ),
-                            child: _loading
+                            child: isLoading
                                 ? const SizedBox(
                                     height: 20, width: 20,
                                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))

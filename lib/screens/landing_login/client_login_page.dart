@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/auth_provider.dart';
 
-class ClientLoginPage extends StatefulWidget {
+class ClientLoginPage extends ConsumerStatefulWidget {
   static const name = 'ClientLoginPage';
   const ClientLoginPage({super.key});
 
   @override
-  State<ClientLoginPage> createState() => _ClientLoginPageState();
+  ConsumerState<ClientLoginPage> createState() => _ClientLoginPageState();
 }
 
-class _ClientLoginPageState extends State<ClientLoginPage> {
+class _ClientLoginPageState extends ConsumerState<ClientLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -39,24 +40,53 @@ class _ClientLoginPageState extends State<ClientLoginPage> {
   Future<void> _onSubmit() async {
     final ok = _formKey.currentState?.validate() ?? false;
     if (!ok) return;
-    setState(() => _loading = true);
 
-    // TODO: integrar backend: POST /auth/login (role=client)
-    await Future.delayed(const Duration(milliseconds: 800));
+    try {
+      // Call auth provider to login
+      await ref.read(authProvider.notifier).login(
+            _emailCtrl.text.trim(),
+            _passCtrl.text,
+          );
 
-    if (mounted) {
-      setState(() => _loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login cliente OK (demo)')),
-      );
-      // Redirigir al flujo de cliente
-      context.go('/home');
+      if (mounted) {
+        // Check if user is a client
+        final user = ref.read(authProvider).user;
+        if (user != null && user.isClient) {
+          // Navigate to client home
+          context.go('/home');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('¡Bienvenido ${user.firstName}!')),
+          );
+        } else {
+          // User is not a client
+          await ref.read(authProvider.notifier).logout();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Esta cuenta no es de cliente. Usa el login de proveedor.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA), // Fondo gris claro
@@ -176,18 +206,18 @@ class _ClientLoginPageState extends State<ClientLoginPage> {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: _loading ? null : _onSubmit,
+                              onPressed: isLoading ? null : _onSubmit,
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 backgroundColor: const Color(0xFF1D3557), // Azul oscuro
                                 foregroundColor: Colors.white,
                               ),
-                              child: _loading
+                              child: isLoading
                                   ? const SizedBox(
                                       height: 20, width: 20,
                                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Text('Iniciar Sesión', 
+                                  : const Text('Iniciar Sesión',
                                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                             ),
                           ),
