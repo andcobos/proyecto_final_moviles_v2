@@ -1,375 +1,220 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../models/job.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/job_service.dart';
 import 'provider_nav_bar.dart';
 
-class ProviderJobsScreen extends StatelessWidget {
+final contractorJobsProvider = FutureProvider<List<Job>>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return [];
+  // Tu backend ya devuelve solo los trabajos del usuario autenticado
+  return await JobService().getJobs();
+});
+
+class ProviderJobsScreen extends ConsumerWidget {
   const ProviderJobsScreen({super.key});
   static const String name = 'ProviderJobsScreen';
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final jobsAsync = ref.watch(contractorJobsProvider);
 
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
+        title: const Text(
           "Trabajos Asignados",
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Campo de búsqueda
-              TextField(
-                decoration: InputDecoration(
-                  hintText: "Buscar trabajos",
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 16),
+        child: jobsAsync.when(
+          data: (jobs) {
+            if (jobs.isEmpty) {
+              return const Center(
+                child: Text("No tienes trabajos asignados por ahora."),
+              );
+            }
 
-              // Filtros
-              Row(
-                children: [
-                  _buildFilterChip("Todos", true),
-                  const SizedBox(width: 8),
-                  _buildFilterChip("Pendientes", false),
-                  const SizedBox(width: 8),
-                  _buildFilterChip("Aceptados", false),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Lista de trabajos asignados
-              _buildJobAssignmentCard(
-                context,
-                "Plomería",
-                "María González",
-                "Reparación de tubería en baño",
-                "Calle Principal 123, Ciudad",
-                "Hoy, 2:00 PM",
-                "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400",
-                Icons.plumbing,
-                Colors.blue,
-              ),
-              const SizedBox(height: 12),
-              _buildJobAssignmentCard(
-                context,
-                "Electricidad",
-                "Carlos Ramírez",
-                "Instalación de ventilador",
-                "Avenida Central 456, Ciudad",
-                "Mañana, 10:00 AM",
-                "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400",
-                Icons.electrical_services,
-                Colors.orange,
-              ),
-              const SizedBox(height: 12),
-              _buildJobAssignmentCard(
-                context,
-                "Jardinería",
-                "Ana López",
-                "Mantenimiento de jardín",
-                "Calle Secundaria 789, Ciudad",
-                "Pasado mañana, 9:00 AM",
-                "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400",
-                Icons.local_florist,
-                Colors.green,
-              ),
-              const SizedBox(height: 12),
-              _buildJobAssignmentCard(
-                context,
-                "Limpieza",
-                "Roberto Silva",
-                "Limpieza profunda del hogar",
-                "Boulevard Norte 321, Ciudad",
-                "Viernes, 3:00 PM",
-                "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400",
-                Icons.cleaning_services,
-                Colors.purple,
-              ),
-            ],
-          ),
+            return ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: jobs.length,
+              itemBuilder: (context, index) {
+                final job = jobs[index];
+                return _JobCard(job: job);
+              },
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => Center(child: Text("Error: $e")),
         ),
       ),
       bottomNavigationBar: const ProviderNavBar(currentIndex: 1),
     );
   }
+}
 
-  Widget _buildFilterChip(String label, bool selected) {
-    return FilterChip(
-      label: Text(label),
-      selected: selected,
-      selectedColor: const Color(0xFF1D3557).withOpacity(0.2),
-      labelStyle: TextStyle(
-        color: selected ? const Color(0xFF1D3557) : Colors.grey.shade700,
-        fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-      ),
-      onSelected: (_) {
-        // TODO: Implementar filtrado
-      },
-    );
-  }
+class _JobCard extends ConsumerWidget {
+  final Job job;
+  const _JobCard({required this.job});
 
-Widget _buildJobAssignmentCard(
-  BuildContext context,
-  String service,
-  String client,
-  String description,
-  String address,
-  String time,
-  String imageUrl,
-  IconData icon,
-  Color color,
-)
- {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Color stateColor;
+    switch (job.status) {
+      case JobStatus.pending:
+        stateColor = Colors.orange;
+        break;
+      case JobStatus.accepted:
+        stateColor = Colors.blue;
+        break;
+      case JobStatus.completed:
+        stateColor = Colors.green;
+        break;
+      case JobStatus.cancelled:
+        stateColor = Colors.red;
+        break;
+    }
+
     return Card(
-      elevation: 2,
+      elevation: 3,
+      margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header con servicio y cliente
+            // Cabecera
             Row(
               children: [
+                Icon(Icons.work_outline, color: stateColor, size: 24),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    job.description,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: stateColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        service,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        client,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
                   child: Text(
-                    "Nuevo",
+                    job.status.displayName,
                     style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.orange.shade800,
+                      color: stateColor,
                       fontWeight: FontWeight.w600,
+                      fontSize: 12,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            // Imagen del trabajo
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
-                width: double.infinity,
-                height: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: double.infinity,
-                    height: 120,
-                    color: Colors.grey.shade200,
-                    child: const Icon(Icons.image_not_supported, size: 40),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Descripción y detalles
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
             const SizedBox(height: 8),
+
+            // Fechas
             Row(
               children: [
-                Icon(Icons.location_on, size: 16, color: Colors.grey.shade600),
+                const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    address,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
+                Text(
+                  "Creado: ${job.createdAt.toLocal()}",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+                const Icon(Icons.refresh, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  time,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  "Actualizado: ${job.updatedAt.toLocal()}",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
 
-            // Botones de acción
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Trabajo rechazado')),
-                      );
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.red.shade300),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+            const SizedBox(height: 12),
+
+            // Botones de acción según estado
+            if (job.status == JobStatus.pending)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        await JobService().cancelJob(job.id);
+                        ref.invalidate(contractorJobsProvider);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Trabajo rechazado"),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.red.shade300),
+                      ),
+                      child: Text(
+                        "Rechazar",
+                        style: TextStyle(color: Colors.red.shade700),
                       ),
                     ),
-                    child: Text(
-                      "Rechazar",
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Trabajo aceptado')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D3557),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await JobService().acceptJob(job.id);
+                        ref.invalidate(contractorJobsProvider);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Trabajo aceptado"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1D3557),
+                      ),
+                      child: const Text(
+                        "Aceptar",
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
-                    child: const Text(
-                      "Aceptar",
-                      style: TextStyle(color: Colors.white),
-                    ),
                   ),
+                ],
+              ),
+
+            if (job.status == JobStatus.accepted)
+              ElevatedButton(
+                onPressed: () async {
+                  await JobService().completeJob(job.id);
+                  ref.invalidate(contractorJobsProvider);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Trabajo completado"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green.shade600,
                 ),
-              ],
-            ),
+                child: const Text("Marcar como completado"),
+              ),
           ],
         ),
       ),
     );
   }
-
-  // void _showAcceptDialog(BuildContext context, String service, String client) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: const Text('Aceptar Trabajo'),
-  //         content: Text('¿Estás seguro de que quieres aceptar el trabajo de $service para $client?'),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.of(context).pop(),
-  //             child: const Text('Cancelar'),
-  //           ),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //               ScaffoldMessenger.of(context).showSnackBar(
-  //                 const SnackBar(
-  //                   content: Text('¡Trabajo aceptado exitosamente!'),
-  //                   backgroundColor: Colors.green,
-  //                 ),
-  //               );
-  //             },
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: const Color(0xFF1D3557),
-  //             ),
-  //             child: const Text('Aceptar'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
-
-  // void _showRejectDialog(BuildContext context, String service, String client) {
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: const Text('Rechazar Trabajo'),
-  //         content: Text('¿Estás seguro de que quieres rechazar el trabajo de $service para $client?'),
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () => Navigator.of(context).pop(),
-  //             child: const Text('Cancelar'),
-  //           ),
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //               ScaffoldMessenger.of(context).showSnackBar(
-  //                 const SnackBar(
-  //                   content: Text('Trabajo rechazado'),
-  //                   backgroundColor: Colors.orange,
-  //                 ),
-  //               );
-  //             },
-  //             style: ElevatedButton.styleFrom(
-  //               backgroundColor: Colors.red,
-  //             ),
-  //             child: const Text('Rechazar'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 }

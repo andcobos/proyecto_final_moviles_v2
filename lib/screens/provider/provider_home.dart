@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/theme_provider.dart';
-import 'provider_nav_bar.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import 'provider_nav_bar.dart';
 
 class ProviderHomeScreen extends ConsumerWidget {
   const ProviderHomeScreen({super.key});
@@ -24,8 +24,9 @@ class ProviderHomeScreen extends ConsumerWidget {
         isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200;
     final boxShadowColor =
         isDarkMode ? Colors.transparent : Colors.black.withOpacity(0.05);
-    final userName = user?.fullName ?? "Usuario";
 
+    final userName = user?.fullName ?? "Usuario";
+    final userRole = user?.role == "CONTRACTOR" ? "Contratista" : "Cliente";
 
     return Scaffold(
       appBar: AppBar(
@@ -44,6 +45,7 @@ class ProviderHomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
+            // 👤 Nombre dinámico
             Text(
               "Hola, $userName",
               style: TextStyle(
@@ -54,18 +56,19 @@ class ProviderHomeScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              "Electricista • 4.8 ⭐ • 124 reseñas",
+              "$userRole • 4.8 ⭐ • 124 reseñas",
+              // 🔜 luego: mostrar rating real con promedio de Review.rating
               style: TextStyle(fontSize: 14, color: secondaryText),
             ),
             const SizedBox(height: 20),
 
-            // Estadísticas rápidas
+            // Estadísticas rápidas (por ahora estático)
             Row(
               children: [
                 Expanded(
                   child: _buildStatCard(
                     "Trabajos Hoy",
-                    "3",
+                    "3", // 🔜 luego: usar Jobs filtrados por fecha de hoy
                     Icons.work_outline,
                     Colors.blue,
                     cardColor,
@@ -78,7 +81,7 @@ class ProviderHomeScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildStatCard(
                     "Pendientes",
-                    "5",
+                    "5", // 🔜 usar Job.status == pending
                     Icons.pending_outlined,
                     Colors.orange,
                     cardColor,
@@ -91,7 +94,7 @@ class ProviderHomeScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildStatCard(
                     "Completados",
-                    "24",
+                    "24", // 🔜 usar Job.status == completed
                     Icons.check_circle_outline,
                     Colors.green,
                     cardColor,
@@ -145,7 +148,7 @@ class ProviderHomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Próximos trabajos
+            // Próximos trabajos (temporalmente estático)
             Text(
               "Próximos trabajos",
               style: TextStyle(
@@ -155,6 +158,7 @@ class ProviderHomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
+
             _buildJobCard(
               "Reparación de tuberías",
               "Sofía Ramírez",
@@ -183,7 +187,7 @@ class ProviderHomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // Ingresos del mes
+            // Ingresos del mes (por ahora fijo)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -214,7 +218,7 @@ class ProviderHomeScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          "\$2,450.00",
+                          "\$2,450.00", // 🔜 luego: sumar Job completados * Service.rate
                           style: TextStyle(
                             color: Colors.green.shade600,
                             fontSize: 20,

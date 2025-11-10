@@ -8,14 +8,35 @@ class JobService {
   final ApiService _api = ApiService();
 
   /// Create a new job (CLIENT only)
-  Future<Job> createJob(CreateJobRequest request) async {
-    final response = await _api.post(
-      ApiConstants.jobs,
-      request.toJson(),
-    );
+  Future<Job?> createJob(CreateJobRequest request) async {
+  final response = await _api.post(ApiConstants.jobs, request.toJson());
 
-    return Job.fromJson(response as Map<String, dynamic>);
+  if (response == null) {
+    throw Exception('Respuesta vacía del servidor');
   }
+
+  // Si la API devuelve { "job": { ... } }
+  final data = (response is Map<String, dynamic> && response.containsKey('job'))
+      ? response['job']
+      : response;
+
+  // Verificar que tenga los campos mínimos antes de crear el objeto
+  if (data['id'] == null || data['description'] == null) {
+    throw Exception('Datos incompletos en la respuesta del servidor');
+  }
+
+  return Job.fromJson({
+    'id': data['id'] ?? '',
+    'description': data['description'] ?? '',
+    'status': data['status'] ?? 'PENDING',
+    'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
+    'updatedAt': data['updatedAt'] ?? DateTime.now().toIso8601String(),
+    'clientId': data['clientId'] ?? '',
+    'contractorId': data['contractorId'] ?? '',
+    'serviceId': data['serviceId'] ?? '',
+  });
+}
+
 
   /// Get all jobs
   /// For CLIENTS: returns their own jobs (any status)

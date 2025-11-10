@@ -67,16 +67,21 @@ class Job {
   /// Create Job from JSON response
   factory Job.fromJson(Map<String, dynamic> json) {
     return Job(
-      id: json['id'] as String,
-      description: json['description'] as String,
-      status: JobStatus.fromString(json['status'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      clientId: json['clientId'] as String,
-      contractorId: json['contractorId'] as String,
-      serviceId: json['serviceId'] as String,
+      id: json['id']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      status: JobStatus.fromString(json['status']?.toString() ?? 'PENDING'),
+      createdAt:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      updatedAt:
+          DateTime.tryParse(json['updatedAt']?.toString() ?? '') ??
+          DateTime.now(),
+      clientId: json['clientId']?.toString() ?? '',
+      contractorId: json['contractorId']?.toString() ?? '',
+      serviceId: json['serviceId']?.toString() ?? '',
     );
   }
+
 
   /// Convert Job to JSON
   Map<String, dynamic> toJson() {

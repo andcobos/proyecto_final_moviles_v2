@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/theme_provider.dart';
-import '../../providers/auth_provider.dart'; // ✅ Importamos el auth provider
+import '../../providers/auth_provider.dart';
+import '../../services/service_services.dart';
+import '../../models/service.dart';
 import 'nav_bar.dart' as customNavBar;
 
 class HomeScreen extends ConsumerWidget {
@@ -12,10 +14,10 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeNotifierProvider).isDarkMode;
-
-    // ✅ Obtenemos el usuario desde el authProvider
     final user = ref.watch(currentUserProvider);
     final userName = user?.fullName ?? "Usuario";
+
+    final serviceService = ServiceService();
 
     return Scaffold(
       appBar: AppBar(
@@ -35,7 +37,7 @@ class HomeScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // ✅ Nombre dinámico
+            // 👋 Nombre dinámico
             Text(
               "Hola, $userName",
               style: const TextStyle(
@@ -72,43 +74,70 @@ class HomeScreen extends ConsumerWidget {
 
             const SizedBox(height: 20),
 
-            // 🧾 Pedidos actuales
+            // 🔧 Servicios disponibles (dinámicos)
             const Text(
-              "Pedidos actuales",
+              "Servicios disponibles",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
 
-            SizedBox(
-              height: 180,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: [
-                  _currentServiceCard(
-                    "Dentista",
-                    "Dr. María González",
-                    "Hoy, 2:00 PM",
-                    "Consulta general",
-                    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400",
+            FutureBuilder<List<dynamic>>(
+              future: ServiceService().getAllServices(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      "Error al cargar servicios: ${snapshot.error}",
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  );
+                }
+
+                final workers = snapshot.data ?? [];
+
+                // Extraemos todos los servicios de todos los contratistas
+                final allServices = <Service>[];
+                for (var worker in workers) {
+                  if (worker['services'] != null) {
+                    for (var s in worker['services']) {
+                      allServices.add(
+                        Service.fromJson(s as Map<String, dynamic>),
+                      );
+                    }
+                  }
+                }
+
+                if (allServices.isEmpty) {
+                  return const Center(
+                    child: Text("No hay servicios disponibles."),
+                  );
+                }
+
+                return SizedBox(
+                  height: 180,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: allServices.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    itemBuilder: (context, index) {
+                      final service = allServices[index];
+                      return GestureDetector(
+                        onTap: () {
+                          final id = service.id;
+                          debugPrint('Navegando con ID del servicio: $id');
+                          context.push('/solicitar-servicio/$id');
+                        },
+
+                        child: _serviceCard(service),
+                      );
+                    },
                   ),
-                  const SizedBox(width: 12),
-                  _currentServiceCard(
-                    "Fontanero",
-                    "Carlos Mendoza",
-                    "Mañana, 10:00 AM",
-                    "Reparación de tubería",
-                    "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400",
-                  ),
-                  const SizedBox(width: 12),
-                  _currentServiceCard(
-                    "Electricista",
-                    "Roberto Silva",
-                    "Pasado mañana, 3:00 PM",
-                    "Instalación de lámpara",
-                    "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=400",
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             const SizedBox(height: 24),
@@ -142,79 +171,42 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // 🧱 Tarjeta de servicio actual
-  Widget _currentServiceCard(
-    String service,
-    String professional,
-    String time,
-    String description,
-    String imageUrl,
-  ) {
+  // 🧱 Tarjeta de servicio dinámico
+  Widget _serviceCard(Service service) {
     return SizedBox(
       width: 160,
       child: Card(
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.image_not_supported),
-                    );
-                  },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.handyman, color: Colors.blueAccent, size: 32),
+              const SizedBox(height: 8),
+              Text(
+                service.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    service,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    professional,
-                    style:
-                        TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    time,
-                    style:
-                        TextStyle(color: Colors.grey.shade500, fontSize: 11),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style:
-                        TextStyle(color: Colors.grey.shade700, fontSize: 11),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              const SizedBox(height: 4),
+              Text(
+                service.description,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // 🏷️ Tarjeta de oferta
+  // 🏷️ Tarjeta de oferta destacada
   Widget _offerCard(
     String title,
     String description,
@@ -255,7 +247,9 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF1D3557),
                         borderRadius: BorderRadius.circular(10),
@@ -274,7 +268,9 @@ class HomeScreen extends ConsumerWidget {
                       child: Text(
                         title,
                         style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 13),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -284,7 +280,9 @@ class HomeScreen extends ConsumerWidget {
                       child: Text(
                         description,
                         style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 11),
+                          color: Colors.grey.shade600,
+                          fontSize: 11,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // IMPORTA PANTALLAS DE AUTENTICACIÓN
@@ -85,11 +86,17 @@ final GoRouter appRouter = GoRouter(
       name: ProfilePage.name,
       builder: (context, state) => const ProfilePage(),
     ),
-    GoRoute(
-      path: '/solicitar-servicio',
+GoRoute(
+      path: '/solicitar-servicio/:id',
       name: SolicitarServicioPage.name,
-      builder: (context, state) => const SolicitarServicioPage(),
+      builder: (context, state) {
+        // 🧠 Recoge el id desde parámetros de la URL
+        final serviceId = state.pathParameters['id'];
+        debugPrint('🟩 ID recibido desde URL: $serviceId');
+        return SolicitarServicioPage(serviceId: serviceId);
+      },
     ),
+
     GoRoute(
       path: '/notificaciones',
       name: NotificacionesPage.name,

@@ -1,75 +1,80 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../models/job.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/job_service.dart';
 import 'nav_bar.dart';
 
-class SolicitarServicioPage extends StatefulWidget {
-  const SolicitarServicioPage({super.key});
+class SolicitarServicioPage extends ConsumerStatefulWidget {
+  final String? serviceId; // ✅ AHORA ES OPCIONAL (nullable)
+  const SolicitarServicioPage({super.key, this.serviceId});
+
   static const String name = 'SolicitarServicioPage';
 
   @override
-  State<SolicitarServicioPage> createState() => _SolicitarServicioPageState();
+  ConsumerState<SolicitarServicioPage> createState() =>
+      _SolicitarServicioPageState();
 }
 
-class _SolicitarServicioPageState extends State<SolicitarServicioPage> {
+class _SolicitarServicioPageState
+    extends ConsumerState<SolicitarServicioPage> {
   String? selectedDate;
   String? selectedTime;
   String? selectedAddress;
 
-  final List<String> attachedImages = [
-    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400',
-    'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
-    'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
-  ];
+  bool isLoading = false;
+
+  final TextEditingController _descController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
+    final user = ref.watch(currentUserProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-          onPressed: () => context.go('/buscar'),
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(), // ✅ vuelve a la pantalla anterior
         ),
         centerTitle: true,
-        title: Text(
+        title: const Text(
           'Solicitar servicio',
-          style: textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: colorScheme.onSurface,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildSectionTitle('Adjuntar fotos', theme),
-              const SizedBox(height: 12),
-              _buildImageCarousel(),
+              _sectionTitle('Descripción del trabajo'),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _descController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Describe el trabajo que necesitas...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
               const SizedBox(height: 24),
 
-              _buildSectionTitle('Fecha y hora preferidas', theme),
+              _sectionTitle('Fecha y hora preferidas'),
               const SizedBox(height: 12),
-              _buildDateTimeSection(theme),
+              _buildDateTimePickers(),
               const SizedBox(height: 24),
 
-              _buildSectionTitle('Dirección', theme),
+              _sectionTitle('Dirección'),
               const SizedBox(height: 12),
-              _buildAddressSection(theme),
-              const SizedBox(height: 24),
-
-              _buildSectionTitle('Resumen', theme),
-              const SizedBox(height: 12),
-              _buildSummarySection(theme),
+              _buildAddressInput(),
               const SizedBox(height: 32),
 
-              _buildSubmitButton(colorScheme),
-              const SizedBox(height: 24),
+              _submitButton(colorScheme, user),
             ],
           ),
         ),
@@ -78,151 +83,54 @@ class _SolicitarServicioPageState extends State<SolicitarServicioPage> {
     );
   }
 
-  Widget _buildSectionTitle(String title, ThemeData theme) {
-    return Text(
-      title,
-      style: theme.textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: theme.colorScheme.onSurface,
-      ),
-    );
-  }
-
-  Widget _buildImageCarousel() {
-    return SizedBox(
-      height: 120,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: attachedImages.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          if (index == attachedImages.length) return _buildAddImageButton();
-          return _buildImageCard(attachedImages[index], index);
-        },
-      ),
-    );
-  }
-
-  Widget _buildImageCard(String imageUrl, int index) {
-    return Container(
-      width: 120,
-      height: 120,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
+  Widget _sectionTitle(String text) => Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
         ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 8,
-            right: 8,
-            child: GestureDetector(
-              onTap: () {
-                setState(() {
-                  attachedImages.removeAt(index);
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.close, color: Colors.white, size: 16),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      );
 
-  Widget _buildAddImageButton() {
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Función de agregar imagen')),
-        );
-      },
-      child: Container(
-        width: 120,
-        height: 120,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.add_photo_alternate_outlined,
-                size: 32, color: Theme.of(context).colorScheme.onSurfaceVariant),
-            const SizedBox(height: 8),
-            Text(
-              'Agregar',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateTimeSection(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
+  Widget _buildDateTimePickers() {
     return Column(
       children: [
         GestureDetector(
           onTap: _selectDate,
-          child: _buildInputBox(
+          child: _inputBox(
             icon: Icons.calendar_today,
             label: selectedDate ?? 'Seleccionar fecha',
-            colorScheme: colorScheme,
           ),
         ),
         const SizedBox(height: 12),
         GestureDetector(
           onTap: _selectTime,
-          child: _buildInputBox(
+          child: _inputBox(
             icon: Icons.access_time,
             label: selectedTime ?? 'Seleccionar hora',
-            colorScheme: colorScheme,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildInputBox({
-    required IconData icon,
-    required String label,
-    required ColorScheme colorScheme,
-  }) {
+  Widget _inputBox({required IconData icon, required String label}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, color: colorScheme.onSurfaceVariant),
+          Icon(icon, color: Colors.grey.shade700),
           const SizedBox(width: 12),
           Text(
             label,
             style: TextStyle(
               color: label.contains('Seleccionar')
-                  ? colorScheme.onSurfaceVariant
-                  : colorScheme.onSurface,
+                  ? Colors.grey.shade600
+                  : Colors.black,
               fontSize: 16,
             ),
           ),
@@ -231,107 +139,94 @@ class _SolicitarServicioPageState extends State<SolicitarServicioPage> {
     );
   }
 
-  Widget _buildAddressSection(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.location_on, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              onChanged: (value) => setState(() => selectedAddress = value),
-              style: TextStyle(color: colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Ingresar dirección',
-                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ),
-        ],
+  Widget _buildAddressInput() {
+    return TextField(
+      onChanged: (value) => selectedAddress = value,
+      decoration: InputDecoration(
+        hintText: 'Ingresar dirección',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
-  Widget _buildSummarySection(ThemeData theme) {
-    final colorScheme = theme.colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        children: [
-          _buildSummaryRow('Trabajo:', 'Instalación de lámpara', colorScheme),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Fecha:', selectedDate ?? '15 de julio de 2024', colorScheme),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Hora:', selectedTime ?? '10:00 AM', colorScheme),
-          const SizedBox(height: 8),
-          _buildSummaryRow('Dirección:', selectedAddress ?? 'Calle Principal 123', colorScheme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value, ColorScheme colorScheme) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: TextStyle(
-              fontWeight: FontWeight.w500,
-              color: colorScheme.onSurface,
-            )),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: TextStyle(color: colorScheme.onSurfaceVariant),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton(ColorScheme colorScheme) {
+  Widget _submitButton(ColorScheme colorScheme, user) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 16),
         ),
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Solicitud enviada correctamente'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          // Redirigir a la pantalla de pago
-          context.go('/pago');
-        },
-        child: Text(
-          'Enviar solicitud',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onPrimary,
-          ),
-        ),
+        onPressed: isLoading
+            ? null
+            : () async {
+                if (_descController.text.isEmpty ||
+                    selectedDate == null ||
+                    selectedTime == null ||
+                    selectedAddress == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Por favor completa todos los campos'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                  return;
+                }
+
+                // 🚨 Validamos si serviceId llegó correctamente
+                if (widget.serviceId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'Error: No se recibió el ID del servicio. Intenta nuevamente.'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                  return;
+                }
+
+                setState(() => isLoading = true);
+                try {
+                  final newJob = CreateJobRequest(
+                    serviceId: widget.serviceId!,
+                    description: _descController.text,
+                  );
+
+                  final createdJob = await JobService().createJob(newJob);
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          createdJob != null
+                              ? 'Trabajo creado con éxito: ${createdJob.id}'
+                              : 'Trabajo creado con éxito',
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    context.go('/pago');
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error al enviar la solicitud: $e'),
+                      backgroundColor: Colors.redAccent,
+                    ),
+                  );
+                } finally {
+                  if (mounted) setState(() => isLoading = false);
+                }
+              },
+        child: isLoading
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                'Enviar solicitud',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
       ),
     );
   }
@@ -345,30 +240,19 @@ class _SolicitarServicioPageState extends State<SolicitarServicioPage> {
     );
     if (picked != null) {
       setState(() {
-        selectedDate =
-            '${picked.day} de ${_getMonthName(picked.month)} de ${picked.year}';
+        selectedDate = '${picked.day}/${picked.month}/${picked.year}';
       });
     }
   }
 
   Future<void> _selectTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
+    final picked =
+        await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (picked != null) {
       setState(() {
         selectedTime =
             '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
     }
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
-    return months[month - 1];
   }
 }
