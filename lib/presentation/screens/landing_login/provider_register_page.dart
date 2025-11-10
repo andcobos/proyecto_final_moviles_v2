@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
-import '../../models/user.dart';
+import '../../../data/models/user.dart';
 
 class ProviderRegisterPage extends ConsumerStatefulWidget {
   static const name = 'ProviderRegisterPage';

@@ -2,34 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 // IMPORTA PANTALLAS DE AUTENTICACIÓN
-import '../../screens/landing_login/landing_page.dart';
-import '../../screens/landing_login/client_login_page.dart';
-import '../../screens/landing_login/client_register_page.dart';
-import '../../screens/landing_login/provider_login_page.dart';
-import '../../screens/landing_login/provider_register_page.dart';
+import '../../presentation/screens/landing_login/landing_page.dart';
+import '../../presentation/screens/landing_login/client_login_page.dart';
+import '../../presentation/screens/landing_login/client_register_page.dart';
+import '../../presentation/screens/landing_login/provider_login_page.dart';
+import '../../presentation/screens/landing_login/provider_register_page.dart';
 
 // IMPORTA PANTALLAS DE CLIENTE
-import '../../screens/client/home_screen.dart';
-import '../../screens/client/categories.dart';
-import '../../screens/client/servicios.dart';
-import '../../screens/client/solicitar_servicio.dart';
-import '../../screens/client/notificaciones.dart';
-import '../../screens/client/payment_screen.dart';
-import '../../screens/provider/prof_settings.dart';
-import '../../screens/client/details_service.dart';
-import '../../screens/client/reseña.dart';
-import '../../screens/client/profile.dart';
+import '../../presentation/screens/client/home_screen.dart';
+import '../../presentation/screens/client/categories.dart';
+import '../../presentation/screens/client/servicios.dart';
+import '../../presentation/screens/client/solicitar_servicio.dart';
+import '../../presentation/screens/client/notificaciones.dart';
+import '../../presentation/screens/client/payment_screen.dart';
+import '../../presentation/screens/provider/prof_settings.dart';
+import '../../presentation/screens/client/details_service.dart';
+import '../../presentation/screens/client/reseña.dart';
+import '../../presentation/screens/client/profile.dart';
 
 
 // IMPORTA PANTALLAS DE PROVEEDOR
-import '../../screens/provider/provider_home.dart';
-import '../../screens/provider/provider_jobs.dart';
-import '../../screens/provider/provider_services.dart';
-import '../../screens/provider/provider_agenda.dart';
-import '../../screens/provider/provider_profile.dart';
-import '../../screens/provider/provider_service_details.dart';
-import '../../screens/provider/provider_edit_profile.dart';
-import '../../screens/provider/provider_profile_settings.dart';
+import '../../presentation/screens/provider/provider_home.dart';
+import '../../presentation/screens/provider/provider_jobs.dart';
+import '../../presentation/screens/provider/provider_services.dart';
+import '../../presentation/screens/provider/provider_agenda.dart';
+import '../../presentation/screens/provider/provider_profile.dart';
+import '../../presentation/screens/provider/provider_service_details.dart';
+import '../../presentation/screens/provider/provider_edit_profile.dart';
+import '../../presentation/screens/provider/provider_profile_settings.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',

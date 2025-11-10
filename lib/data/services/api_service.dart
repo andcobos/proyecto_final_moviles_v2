@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../config/constants.dart';
+import '../../core/constants.dart';
 import 'storage_service.dart';
 
 /// API Exception

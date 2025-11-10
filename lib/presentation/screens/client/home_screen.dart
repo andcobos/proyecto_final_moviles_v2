@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/service_services.dart';
-import '../../models/service.dart';
+import '../../../data/services/service_services.dart';
+import '../../../data/models/service.dart';
 import 'nav_bar.dart' as customNavBar;
 
 class HomeScreen extends ConsumerWidget {

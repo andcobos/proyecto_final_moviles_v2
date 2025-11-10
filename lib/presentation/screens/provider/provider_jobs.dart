@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/job.dart';
+import '../../../data/models/job.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/job_service.dart';
+import '../../../data/services/job_service.dart';
 import 'provider_nav_bar.dart';
 
 final contractorJobsProvider = FutureProvider<List<Job>>((ref) async {

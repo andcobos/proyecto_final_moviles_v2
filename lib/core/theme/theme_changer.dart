@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/theme_provider.dart';
+import '../../presentation/providers/theme_provider.dart';
 
 class ThemeChangerScreen extends ConsumerWidget {
   static const name = 'theme_changer_screen';

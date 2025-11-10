@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../models/job.dart';
+import '../../../data/models/job.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/job_service.dart';
+import '../../../data/services/job_service.dart';
 import 'nav_bar.dart';
 
 class SolicitarServicioPage extends ConsumerStatefulWidget {
