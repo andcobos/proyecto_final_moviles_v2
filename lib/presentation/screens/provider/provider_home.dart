@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import 'provider_nav_bar.dart';
+import '../../../data/models/job.dart';
+import 'provider_jobs.dart';
 
 class ProviderHomeScreen extends ConsumerWidget {
   const ProviderHomeScreen({super.key});
@@ -13,6 +15,7 @@ class ProviderHomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(themeNotifierProvider).isDarkMode;
     final user = ref.watch(currentUserProvider);
+    final jobsAsync = ref.watch(contractorActiveJobsProvider);
 
     // Colores adaptativos
     final primaryText = isDarkMode ? Colors.white : Colors.black;
@@ -41,205 +44,221 @@ class ProviderHomeScreen extends ConsumerWidget {
         elevation: 0,
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            // 👤 Nombre dinámico
-            Text(
-              "Hola, $userName",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: primaryText,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "$userRole • 4.8 ⭐ • 124 reseñas",
-              // 🔜 luego: mostrar rating real con promedio de Review.rating
-              style: TextStyle(fontSize: 14, color: secondaryText),
-            ),
-            const SizedBox(height: 20),
+      body: jobsAsync.when(
+        data: (jobs) {
+          // --- Filtros dinámicos ---
+          final acceptedJobs =
+              jobs.where((job) => job.status == JobStatus.accepted).toList();
+          final pendingJobs =
+              jobs.where((job) => job.status == JobStatus.pending).toList();
+          final completedJobs =
+              jobs.where((job) => job.status == JobStatus.completed).toList();
 
-            // Estadísticas rápidas (por ahora estático)
-            Row(
+          final today = DateTime.now();
+          final jobsToday = acceptedJobs.where((job) =>
+              job.createdAt.year == today.year &&
+              job.createdAt.month == today.month &&
+              job.createdAt.day == today.day);
+
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: ListView(
               children: [
-                Expanded(
-                  child: _buildStatCard(
-                    "Trabajos Hoy",
-                    "3", // 🔜 luego: usar Jobs filtrados por fecha de hoy
-                    Icons.work_outline,
-                    Colors.blue,
-                    cardColor,
-                    boxShadowColor,
-                    primaryText,
-                    secondaryText,
+                // 👤 Nombre dinámico
+                Text(
+                  "Hola, $userName",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    "Pendientes",
-                    "5", // 🔜 usar Job.status == pending
-                    Icons.pending_outlined,
-                    Colors.orange,
-                    cardColor,
-                    boxShadowColor,
-                    primaryText,
-                    secondaryText,
+                const SizedBox(height: 8),
+                Text(
+                  "$userRole • 4.8 ⭐ • 124 reseñas",
+                  style: TextStyle(fontSize: 14, color: secondaryText),
+                ),
+                const SizedBox(height: 20),
+
+                // Estadísticas dinámicas
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        "Trabajos Hoy",
+                        jobsToday.length.toString(),
+                        Icons.work_outline,
+                        Colors.blue,
+                        cardColor,
+                        boxShadowColor,
+                        primaryText,
+                        secondaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        "Pendientes",
+                        pendingJobs.length.toString(),
+                        Icons.pending_outlined,
+                        Colors.orange,
+                        cardColor,
+                        boxShadowColor,
+                        primaryText,
+                        secondaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        "Completados",
+                        completedJobs.length.toString(),
+                        Icons.check_circle_outline,
+                        Colors.green,
+                        cardColor,
+                        boxShadowColor,
+                        primaryText,
+                        secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Acciones rápidas
+                Text(
+                  "Acciones rápidas",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatCard(
-                    "Completados",
-                    "24", // 🔜 usar Job.status == completed
-                    Icons.check_circle_outline,
-                    Colors.green,
-                    cardColor,
-                    boxShadowColor,
-                    primaryText,
-                    secondaryText,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionCard(
+                        "Ver Trabajos",
+                        Icons.work_outline,
+                        Colors.blue,
+                        () => context.go('/pro/trabajos'),
+                        cardColor,
+                        boxShadowColor,
+                        primaryText,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildActionCard(
+                        "Mi Agenda",
+                        Icons.calendar_today,
+                        Colors.green,
+                        () => context.go('/pro/agenda'),
+                        cardColor,
+                        boxShadowColor,
+                        primaryText,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Próximos trabajos (solo ACEPTADOS)
+                Text(
+                  "Próximos trabajos",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryText,
                   ),
                 ),
-              ],
-            ),
+                const SizedBox(height: 12),
 
-            const SizedBox(height: 24),
-
-            // Acciones rápidas
-            Text(
-              "Acciones rápidas",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
-                    "Ver Trabajos",
-                    Icons.work_outline,
-                    Colors.blue,
-                    () => context.go('/pro/trabajos'),
-                    cardColor,
-                    boxShadowColor,
-                    primaryText,
+                if (acceptedJobs.isEmpty)
+                  Text(
+                    "No tienes trabajos próximos.",
+                    style: TextStyle(color: secondaryText),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionCard(
-                    "Mi Agenda",
-                    Icons.calendar_today,
-                    Colors.green,
-                    () => context.go('/pro/agenda'),
-                    cardColor,
-                    boxShadowColor,
-                    primaryText,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Próximos trabajos (temporalmente estático)
-            Text(
-              "Próximos trabajos",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryText,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            _buildJobCard(
-              "Reparación de tuberías",
-              "Sofía Ramírez",
-              "Hoy, 10:00 AM",
-              "Calle Principal 123",
-              Icons.plumbing,
-              Colors.blue,
-              cardColor,
-              borderColor,
-              secondaryText,
-              primaryText,
-            ),
-            const SizedBox(height: 8),
-            _buildJobCard(
-              "Instalación de lámpara",
-              "Carlos Mendoza",
-              "Mañana, 2:00 PM",
-              "Avenida Central 456",
-              Icons.electrical_services,
-              Colors.orange,
-              cardColor,
-              borderColor,
-              secondaryText,
-              primaryText,
-            ),
-
-            const SizedBox(height: 24),
-
-            // Ingresos del mes (por ahora fijo)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDarkMode
-                    ? Colors.green.shade900.withOpacity(0.3)
-                    : Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isDarkMode
-                      ? Colors.green.shade700
-                      : Colors.green.shade200,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.attach_money,
-                      color: Colors.green.shade600, size: 32),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Ingresos del mes",
-                          style: TextStyle(
-                            color: Colors.green.shade600,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          "\$2,450.00", // 🔜 luego: sumar Job completados * Service.rate
-                          style: TextStyle(
-                            color: Colors.green.shade600,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                ...acceptedJobs.map(
+                  (job) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: _buildJobCard(
+                      job.description,
+                      "Cliente ID: ${job.clientId}",
+                      "Creado: ${_formatDate(job.createdAt)}",
+                      "Servicio ID: ${job.serviceId}",
+                      Icons.build,
+                      Colors.blue,
+                      cardColor,
+                      borderColor,
+                      secondaryText,
+                      primaryText,
                     ),
                   ),
-                  Icon(Icons.trending_up, color: Colors.green.shade600),
-                ],
-              ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Ingresos del mes (placeholder)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? Colors.green.shade900.withOpacity(0.3)
+                        : Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isDarkMode
+                          ? Colors.green.shade700
+                          : Colors.green.shade200,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.attach_money,
+                          color: Colors.green.shade600, size: 32),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Ingresos del mes",
+                              style: TextStyle(
+                                color: Colors.green.shade600,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              "\$2,450.00", // luego: sumar Job completados * Service.rate
+                              style: TextStyle(
+                                color: Colors.green.shade600,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.trending_up, color: Colors.green.shade600),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text("Error al cargar trabajos: $e")),
       ),
       bottomNavigationBar: const ProviderNavBar(currentIndex: 0),
     );
   }
 
-  // --- Widgets ---
+  // --- Widgets auxiliares ---
 
   Widget _buildStatCard(
     String title,
@@ -366,10 +385,8 @@ class ProviderHomeScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  client,
-                  style: TextStyle(fontSize: 14, color: secondaryText),
-                ),
+                Text(client,
+                    style: TextStyle(fontSize: 14, color: secondaryText)),
                 const SizedBox(height: 4),
                 Text(time,
                     style: TextStyle(fontSize: 12, color: secondaryText)),
@@ -388,5 +405,11 @@ class ProviderHomeScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  static String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/"
+        "${date.month.toString().padLeft(2, '0')}/"
+        "${date.year}";
   }
 }
