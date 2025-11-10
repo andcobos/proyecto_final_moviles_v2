@@ -8,9 +8,16 @@ import 'provider_nav_bar.dart';
 final contractorJobsProvider = FutureProvider<List<Job>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
-  // Tu backend ya devuelve solo los trabajos del usuario autenticado
-  return await JobService().getJobs();
+
+  final allJobs = await JobService().getJobs();
+
+  final myJobs = allJobs.where((job) {
+    return job.contractorId == user.id;
+  }).toList();
+
+  return myJobs;
 });
+
 
 class ProviderJobsScreen extends ConsumerWidget {
   const ProviderJobsScreen({super.key});
@@ -86,7 +93,7 @@ class _JobCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Cabecera
+            // Cabecera con icono y estado
             Row(
               children: [
                 Icon(Icons.work_outline, color: stateColor, size: 24),
@@ -145,21 +152,31 @@ class _JobCard extends ConsumerWidget {
 
             const SizedBox(height: 12),
 
-            // Botones de acción según estado
+            // 🔸 Acciones según estado del trabajo
             if (job.status == JobStatus.pending)
               Row(
                 children: [
+                  // 🔴 Botón Rechazar
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () async {
-                        await JobService().cancelJob(job.id);
-                        ref.invalidate(contractorJobsProvider);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Trabajo rechazado"),
-                            backgroundColor: Colors.redAccent,
-                          ),
-                        );
+                        try {
+                          await JobService().cancelJob(job.id);
+                          ref.invalidate(contractorJobsProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Trabajo rechazado"),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Error al rechazar: $e"),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: Colors.red.shade300),
@@ -171,17 +188,28 @@ class _JobCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
+
+                  // 🟢 Botón Aceptar
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        await JobService().acceptJob(job.id);
-                        ref.invalidate(contractorJobsProvider);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Trabajo aceptado"),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
+                        try {
+                          await JobService().acceptJob(job.id);
+                          ref.invalidate(contractorJobsProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Trabajo aceptado"),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Error al aceptar: $e"),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1D3557),
@@ -195,17 +223,27 @@ class _JobCard extends ConsumerWidget {
                 ],
               ),
 
+            // ✅ Botón “Marcar como completado”
             if (job.status == JobStatus.accepted)
               ElevatedButton(
                 onPressed: () async {
-                  await JobService().completeJob(job.id);
-                  ref.invalidate(contractorJobsProvider);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Trabajo completado"),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
+                  try {
+                    await JobService().completeJob(job.id);
+                    ref.invalidate(contractorJobsProvider);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Trabajo completado"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Error al completar: $e"),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.shade600,
