@@ -97,19 +97,28 @@ class HomeScreen extends ConsumerWidget {
                   );
                 }
 
-                final workers = snapshot.data ?? [];
+                
+                final data = snapshot.data ?? [];
 
-                // Extraemos todos los servicios de todos los contratistas
                 final allServices = <Service>[];
-                for (var worker in workers) {
-                  if (worker['services'] != null) {
-                    for (var s in worker['services']) {
+
+                // Verifica si la respuesta es una lista de JSON o lista de modelos
+                for (var item in data) {
+                  // Si el item ya es un Service (por ejemplo, tu ServiceService().getAllServices() ya hace el fromJson)
+                  if (item is Service) {
+                    allServices.add(item);
+                  }
+                  // Si viene como un Map (ej: JSON de worker con services)
+                  else if (item is Map<String, dynamic> &&
+                      item['services'] != null) {
+                    for (var s in item['services']) {
                       allServices.add(
                         Service.fromJson(s as Map<String, dynamic>),
                       );
                     }
                   }
                 }
+
 
                 if (allServices.isEmpty) {
                   return const Center(
@@ -125,18 +134,19 @@ class HomeScreen extends ConsumerWidget {
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
                       final service = allServices[index];
+
                       return GestureDetector(
                         onTap: () {
                           final id = service.id;
-                          debugPrint('Navegando con ID del servicio: $id');
+                          debugPrint('🟩 Navegando con ID del servicio: $id');
                           context.push('/solicitar-servicio/$id');
                         },
-
                         child: _serviceCard(service),
                       );
                     },
                   ),
                 );
+
               },
             ),
 

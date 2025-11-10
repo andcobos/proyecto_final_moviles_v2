@@ -59,9 +59,9 @@ class Service {
 
 /// Service Input Model (for creating/updating services)
 class ServiceInput {
-  final String name;
-  final String description;
-  final double rate;
+  String name;
+  String description;
+  double rate;
 
   ServiceInput({
     required this.name,
@@ -77,3 +77,4 @@ class ServiceInput {
     };
   }
 }
+

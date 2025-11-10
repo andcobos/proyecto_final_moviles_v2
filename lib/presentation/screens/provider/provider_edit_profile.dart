@@ -1,200 +1,230 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/models/service.dart';
+import '../../../data/services/service_services.dart';
+import 'provider_nav_bar.dart';
 
-class ProviderEditProfileScreen extends StatefulWidget {
+class ProviderEditProfileScreen extends ConsumerStatefulWidget {
   const ProviderEditProfileScreen({super.key});
   static const String name = 'ProviderEditProfileScreen';
 
   @override
-  State<ProviderEditProfileScreen> createState() => _ProviderEditProfileScreenState();
+  ConsumerState<ProviderEditProfileScreen> createState() =>
+      _ProviderEditProfileScreenState();
 }
 
-class _ProviderEditProfileScreenState extends State<ProviderEditProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController(text: 'Ricardo Mendoza');
-  final _professionCtrl = TextEditingController(text: 'Electricista');
-  final _services = ['Reparaciones', 'Instalaciones', 'Mantenimiento'];
-  final List<String> _portfolioImages = [];
+class _ProviderEditProfileScreenState
+    extends ConsumerState<ProviderEditProfileScreen> {
+  final List<ServiceInput> _services = [];
+  bool _isLoading = false;
 
   @override
-  void dispose() {
-    _nameCtrl.dispose();
-    _professionCtrl.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadExistingServices();
   }
 
-  void _addService() async {
-    final newService = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          title: const Text('Agregar servicio'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Nombre del servicio',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('Agregar'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _loadExistingServices() async {
+    try {
+      final serviceService = ServiceService();
+      final existing = await serviceService.getMyServices();
 
-    if (newService != null && newService.isNotEmpty) {
-      setState(() => _services.add(newService));
+      setState(() {
+        _services.clear();
+        _services.addAll(
+          existing.map((s) => ServiceInput(
+            name: s.name,
+            description: s.description,
+            rate: s.rate,
+          )),
+        );
+      });
+    } catch (e) {
+      debugPrint("Error cargando servicios: $e");
     }
   }
 
-  void _removeService(String service) {
-    setState(() => _services.remove(service));
+  void _addService() {
+    setState(() {
+      _services.add(ServiceInput(name: '', description: '', rate: 0));
+    });
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Aquí podrías actualizar los datos globales o backend
+  void _removeService(int index) {
+    setState(() {
+      _services.removeAt(index);
+    });
+  }
+
+  Future<void> _saveServices() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final serviceService = ServiceService();
+      final payload = {
+        "services": _services.map((s) => s.toJson()).toList(),
+      };
+
+      await serviceService.updateMyServices(payload);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Servicios actualizados correctamente"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perfil actualizado correctamente')),
+        SnackBar(
+          content: Text("Error al guardar: $e"),
+          backgroundColor: Colors.redAccent,
+        ),
       );
-      context.pop(); // Regresa al perfil principal
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    const accent = Color(0xFF1D3557);
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
         title: const Text('Editar Perfil'),
         centerTitle: true,
+        backgroundColor: accent,
+        foregroundColor: Colors.white,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Nombre
-                Text('Nombre', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _nameCtrl,
-                  validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
-                  decoration: const InputDecoration(
-                    hintText: 'Tu nombre completo',
-                    border: OutlineInputBorder(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                "Servicios ofrecidos",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Agrega los servicios que ofreces junto con su descripción y tarifa.",
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+
+              if (_services.isEmpty)
+                const Center(
+                  child: Text(
+                    "No tienes servicios aún. Agrega uno nuevo.",
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ),
-                const SizedBox(height: 20),
 
-                // Profesión
-                Text('Profesión', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _professionCtrl,
-                  validator: (v) => v == null || v.isEmpty ? 'Campo obligatorio' : null,
-                  decoration: const InputDecoration(
-                    hintText: 'Ej. Electricista, Plomero, Pintor...',
-                    border: OutlineInputBorder(),
+              ..._services.asMap().entries.map((entry) {
+                final index = entry.key;
+                final service = entry.value;
+                return _buildServiceCard(service, index, isDark);
+              }),
+
+              const SizedBox(height: 16),
+              Center(
+                child: OutlinedButton.icon(
+                  onPressed: _addService,
+                  icon: const Icon(Icons.add),
+                  label: const Text("Agregar servicio"),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: accent,
+                    side: BorderSide(color: accent),
                   ),
                 ),
-                const SizedBox(height: 20),
-
-                // Servicios ofrecidos
-                Text('Servicios ofrecidos', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    ..._services.map((s) => Chip(
-                          label: Text(s),
-                          backgroundColor: colorScheme.primary.withOpacity(0.1),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                          onDeleted: () => _removeService(s),
-                        )),
-                    ActionChip(
-                      label: const Text('Agregar'),
-                      onPressed: _addService,
-                      avatar: const Icon(Icons.add, size: 18),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Portafolio
-                Text('Portafolio', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 120,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      ..._portfolioImages.map((img) => Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(img, width: 120, fit: BoxFit.cover),
-                            ),
-                          )),
-                      GestureDetector(
-                        onTap: () {
-                          // Simulación de agregar imagen
-                          setState(() => _portfolioImages.add(
-                              'https://images.unsplash.com/photo-1581091215367-59ab6a903399?w=400'));
-                        },
-                        child: Container(
-                          width: 120,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade400),
+              ),
+              const SizedBox(height: 30),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _saveServices,
+                  icon: _isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
                           ),
-                          child: const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Guardar cambios
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveProfile,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D3557),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Guardar Cambios',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        )
+                      : const Icon(Icons.save),
+                  label: Text(
+                      _isLoading ? "Guardando..." : "Guardar cambios"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: accent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+      ),
+      bottomNavigationBar: const ProviderNavBar(currentIndex: 4),
+    );
+  }
+
+  Widget _buildServiceCard(ServiceInput service, int index, bool isDark) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: TextEditingController(text: service.name),
+              decoration: const InputDecoration(
+                labelText: 'Nombre del servicio',
+                prefixIcon: Icon(Icons.build),
+              ),
+              onChanged: (value) => service.name = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: TextEditingController(text: service.description),
+              decoration: const InputDecoration(
+                labelText: 'Descripción',
+                prefixIcon: Icon(Icons.description),
+              ),
+              onChanged: (value) => service.description = value,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: TextEditingController(text: service.rate.toString()),
+              decoration: const InputDecoration(
+                labelText: 'Tarifa (\$)',
+                prefixIcon: Icon(Icons.monetization_on),
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              onChanged: (value) =>
+                  service.rate = double.tryParse(value) ?? 0.0,
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                onPressed: () => _removeService(index),
+              ),
+            ),
+          ],
         ),
       ),
     );

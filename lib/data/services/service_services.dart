@@ -25,28 +25,25 @@ class ServiceService {
     return [];
   }
 
-  /// ✅ Obtener todos los servicios disponibles (si tienes un endpoint público)
-  Future<List<Service>> getAllServices() async {
-    final response = await _api.get(ApiConstants.services);
+  /// ✅ Obtener todos los servicios ofrecidos por todos los contratistas
+Future<List<Service>> getAllServices() async {
+  final response = await _api.get(ApiConstants.contractors, includeAuth: true);
 
-    if (response is List) {
-      return response
-          .map((json) => Service.fromJson(json as Map<String, dynamic>))
-          .toList();
-    }
+  final allServices = <Service>[];
 
-    // Si el backend devuelve { services: [...] }
-    if (response is Map<String, dynamic> && response.containsKey('services')) {
-      final list = response['services'];
-      if (list is List) {
-        return list
-            .map((json) => Service.fromJson(json as Map<String, dynamic>))
-            .toList();
+  if (response is List) {
+    for (var contractor in response) {
+      if (contractor['services'] != null) {
+        for (var s in contractor['services']) {
+          allServices.add(Service.fromJson(s as Map<String, dynamic>));
+        }
       }
     }
-
-    return [];
   }
+
+  return allServices;
+}
+
 
   /// ✅ Obtener un servicio específico por su ID
   Future<Service> getServiceById(String id) async {
@@ -83,4 +80,11 @@ class ServiceService {
 
     return [];
   }
+
+  Future<void> updateMyServices(Map<String, dynamic> payload) async {
+    await _api.patch(ApiConstants.updateServices, payload, includeAuth: true);
+  }
+
+
+
 }
