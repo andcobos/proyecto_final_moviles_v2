@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../config/constants.dart';
+import '../../core/constants.dart';
 import '../models/user.dart';
 
 /// Storage Service

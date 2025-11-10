@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../config/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
 
 // Lista de colores disponible (se expone para widgets que quieran mostrar opciones)
 final colorListProvider = Provider((ref) => colorList);

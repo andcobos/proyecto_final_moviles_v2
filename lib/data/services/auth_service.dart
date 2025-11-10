@@ -1,4 +1,4 @@
-import '../config/constants.dart';
+import '../../core/constants.dart';
 import '../models/user.dart';
 import 'api_service.dart';
 import 'storage_service.dart';

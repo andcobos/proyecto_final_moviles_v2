@@ -1,4 +1,4 @@
-import '../config/constants.dart';
+import '../../core/constants.dart';
 import '../models/job.dart';
 import 'api_service.dart';
 
